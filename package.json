@@ -10,7 +10,8 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "midi-player-js": "^2.0.13",
-    "vue": "^2.6.11"
+    "vue": "^2.6.11",
+    "webmidi": "^2.5.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
