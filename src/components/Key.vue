@@ -1,5 +1,5 @@
 <template>
-  <div class="col" v-bind:class="{ pressed: velocity}" >
+  <div v-bind:class="{ pressed: velocity}" >
   </div>
 </template>
 
@@ -18,9 +18,10 @@ export default {
 <style scoped>
 div {
   width: 50px;
-  height: 500px;
+  height: 300px;
   border: solid;
   background-color: black;
+  margin: auto;  /* Magic! */
 }
 
 .pressed {

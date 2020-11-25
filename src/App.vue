@@ -4,7 +4,7 @@
     <input @change="readFile" type="file" name="midi" id="midi">
     <button @click="isConfiguring = !isConfiguring" >{{isConfiguring}}</button>
     <p :key="input" v-for="input in inputs">{{input}}</p>
-    <div class="row">
+    <div id="wrapper">
       <key :key="k" :velocity="v" v-for="(v, k) in keys"></key>
     </div>
   </div>
@@ -109,5 +109,12 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+#wrapper {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  align-items: flex-end;
 }
 </style>
