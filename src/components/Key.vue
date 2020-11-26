@@ -1,5 +1,5 @@
 <template>
-  <div v-bind:class="{ pressed: velocity}" >
+  <div class="key" v-bind:class="{ pressed: velocity}" >
   </div>
 </template>
 
@@ -16,12 +16,13 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-div {
+.key {
   width: 50px;
-  height: 150px;
+  height: auto;
   border: solid;
   background-color: whitesmoke;
-  margin: auto;  /* Magic! */
+  margin: 0;
+  padding: 0;
 }
 
 .pressed {

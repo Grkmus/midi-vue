@@ -1,25 +1,33 @@
 <template>
   <div class="note-bar">
-    <note v-bind:class="{ playing: velocity}"></note>
+    <div class="note" :style="note" :key="index" v-for="(note, index) in notes">
+    </div>
   </div>
 </template>
 
 <script>
-import Note from './Note.vue';
+// import Note from './Note.vue';
 
 export default {
   name: 'NoteBar',
-  components: {
-    Note,
-  },
   props: {
-    velocity: null,
-    delta: null,
-    // tick: null,
+    note: {
+      velocity: 0,
+      delta: 0,
+    },
   },
-  watch: {
-    velocity(oldVal, newVal) {
-      console.log(oldVal, newVal, 'watching!', this._uid); // eslint-disable-line
+  data() {
+    return {
+      notes: [],
+    };
+  },
+  methods: {
+    createNote() {
+      this.notes.push({
+        height: '500px',
+        top: '-500px',
+      });
+      console.log('Create note!');
     },
   },
 };
@@ -29,10 +37,21 @@ export default {
 <style scoped>
 .note-bar {
   width: 50px;
-  height: 700px;
-  border: solid;
+  height: auto;
+  border: 1px solid rgba(70, 66, 66, 0.37);
   background-color: whitesmoke;
-  margin: auto;  /* Magic! */
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.note {
+  margin: 0;
+  padding: 0;
+  height: 50px;
+  width: 100%;
+  background-color: red ;
+  position: absolute;
 }
 
 </style>

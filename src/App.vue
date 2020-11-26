@@ -1,10 +1,11 @@
 <template>
   <div id="app">
-    <input @change="readFile" type="file" name="midi" id="midi">
-    <button @click="isConfiguring = !isConfiguring" >{{isConfiguring}}</button>
+    <div id="player">
+      <input @change="readFile" type="file" name="midi" id="midi">
+      <button @click="test" >{{isConfiguring}}</button>
+    </div>
     <div id="sheet">
-      <note-bar :key="'bar_' + k" :velocity="v.velocity" :delta="v.delta" v-for="(v, k) in bars">
-
+      <note-bar :key="k" :ref="k" :note="v.note" v-for="(v, k) in bars">
       </note-bar>
     </div>
     <div id="keyboard">
@@ -18,11 +19,13 @@ import MidiPlayer from 'midi-player-js';
 import WebMidi from 'webmidi';
 import Key from './components/Key.vue';
 import NoteBar from './components/NoteBar.vue';
+// import Note from './components/Note.vue';
 
 export default {
   name: 'App',
   components: {
     Key,
+    // Note,
     NoteBar,
   },
   data() {
@@ -31,20 +34,27 @@ export default {
       midiFile: null,
       dataUri: null,
       reader: new FileReader(),
-      keys: {},
-      bars: {},
       inputs: Array,
       outputs: Array,
+      keys: {},
+      bars: {},
       midiAccess: null,
       midiDevice: null,
       isConfiguring: false,
       start: 36,
       end: 96,
+      sheetLength: 0,
     };
   },
   created() {
     for (let i = this.start; i < this.end; i += 1) {
-      this.keys[i] = 0;
+      this.$set(this.keys, i, 0);
+      this.$set(this.bars, i, {
+        note: {
+          velocity: 0,
+          delta: 0,
+        },
+      });
     }
     this.reader.addEventListener('load', (e) => this.playMidi(e));
     this.player.on('midiEvent', (e) => {
@@ -52,10 +62,11 @@ export default {
       const { noteNumber, velocity, delta } = e;
       if (e.name === 'Note on') this.playNoteFromSong(noteNumber, velocity, delta);
     });
-    // this.player.on('playing', (e) => {
-    //   console.log(e);
-    //   this.$emit('tick', e.tick);
-    // });
+    this.player.on('playing', (e) => {
+      console.log(e);
+      this.$el.getElementsByClassName('note').style.top = `${this.amount}px`;
+      this.test();
+    });
     this.$on('noteon', (noteNumber) => {
       console.log(noteNumber);
       if (this.start) this.end = noteNumber;
@@ -76,6 +87,17 @@ export default {
     });
   },
   methods: {
+    test() {
+      console.log('test');
+      console.log();
+      this.$refs[63][0].createNote();
+      // if (this.amount === 700) this.amount = -150;
+      // this.$root.$emit('note63');
+      // this.$set(this.bars, 63, { note: { velocity: 10, delta: 30 } });
+      // console.log(this.$refs[63][0].createNote);
+      // console.log(this.$refs[63][0].$el.style.top);
+      // this.bars[63] = 5;
+    },
     playMidi(event) {
       this.midiFile = event.target.result;
       this.player.loadArrayBuffer(this.midiFile);
@@ -89,6 +111,9 @@ export default {
       this.$set(this.keys, noteNumber, velocity);
     },
     playNoteFromSong(noteNumber, velocity, delta) {
+      console.log('Playing: ', noteNumber, velocity, delta);
+      console.log({ velocity, delta });
+      console.log(this.bars[noteNumber]);
       this.$set(this.bars, noteNumber, { velocity, delta });
     },
     configure() {
@@ -116,31 +141,38 @@ export default {
 
 <style>
 #app {
+  /* display: flex;
+  flex-wrap: nowrap;
+  flex-direction: column; */
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 0;
+  height: 100%;
 }
-#keyboard {
+#player {
   display: flex;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  align-items: flex-end;
-  align-content: center;
+  height: 5%;
+  justify-content: center;
+  background: #2c3e50;
 }
 #sheet {
   display: flex;
-  position: fixed;
+  height: 80%;
   width: 100%;
-  align-items: flex-end;
-  align-content: center;
 }
-body {
+#keyboard {
+  display: flex;
+  width: 100%;
+  height: 15%;
+}
+
+html, body {
   background-color: rgb(59, 54, 54);
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 </style>

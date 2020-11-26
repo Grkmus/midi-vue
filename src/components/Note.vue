@@ -1,5 +1,5 @@
 <template>
-  <div class="note"></div>
+  <div class="note" v-bind:class="{ playing: velocity}"></div>
 </template>
 
 <script>
@@ -22,6 +22,7 @@ export default {
   background-color: green;
   margin: 0;
   padding: 0;
+  z-index: -11;
 }
 .playing {
   background-color: orangered;
