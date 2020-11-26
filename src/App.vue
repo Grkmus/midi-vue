@@ -1,10 +1,13 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png" />
     <input @change="readFile" type="file" name="midi" id="midi">
     <button @click="isConfiguring = !isConfiguring" >{{isConfiguring}}</button>
-    <p :key="input" v-for="input in inputs">{{input}}</p>
-    <div id="wrapper">
+    <div id="sheet">
+      <note-bar :key="'bar_' + k" :velocity="v.velocity" :delta="v.delta" v-for="(v, k) in bars">
+
+      </note-bar>
+    </div>
+    <div id="keyboard">
       <key :key="k" :velocity="v" v-for="(v, k) in keys"></key>
     </div>
   </div>
@@ -14,11 +17,13 @@
 import MidiPlayer from 'midi-player-js';
 import WebMidi from 'webmidi';
 import Key from './components/Key.vue';
+import NoteBar from './components/NoteBar.vue';
 
 export default {
   name: 'App',
   components: {
     Key,
+    NoteBar,
   },
   data() {
     return {
@@ -26,24 +31,31 @@ export default {
       midiFile: null,
       dataUri: null,
       reader: new FileReader(),
-      keyAmount: 12,
       keys: {},
+      bars: {},
       inputs: Array,
       outputs: Array,
       midiAccess: null,
       midiDevice: null,
       isConfiguring: false,
-      start: null,
-      end: null,
+      start: 36,
+      end: 96,
     };
   },
   created() {
-    this.doConfigure();
+    for (let i = this.start; i < this.end; i += 1) {
+      this.keys[i] = 0;
+    }
     this.reader.addEventListener('load', (e) => this.playMidi(e));
     this.player.on('midiEvent', (e) => {
-      const { noteNumber, velocity } = e;
-      if (e.name === 'Note on') this.playNote(noteNumber, velocity);
+      console.log(e);
+      const { noteNumber, velocity, delta } = e;
+      if (e.name === 'Note on') this.playNoteFromSong(noteNumber, velocity, delta);
     });
+    // this.player.on('playing', (e) => {
+    //   console.log(e);
+    //   this.$emit('tick', e.tick);
+    // });
     this.$on('noteon', (noteNumber) => {
       console.log(noteNumber);
       if (this.start) this.end = noteNumber;
@@ -76,6 +88,9 @@ export default {
     playNote(noteNumber, velocity) {
       this.$set(this.keys, noteNumber, velocity);
     },
+    playNoteFromSong(noteNumber, velocity, delta) {
+      this.$set(this.bars, noteNumber, { velocity, delta });
+    },
     configure() {
       this.isConfiguring = true;
       this.start = null;
@@ -87,13 +102,11 @@ export default {
       });
       if (this.start && this.end) { this.doConfigure(this.start, this.end); }
     },
-    doConfigure(startKey = 36, endKey = 48) {
-      console.log('configuring actual:', startKey, endKey);
-      const keys = {};
-      for (let i = startKey; i < endKey; i += 1) {
-        keys[i] = 0;
+    doConfigure() {
+      for (let i = this.start; i < this.end; i += 1) {
+        this.keys[i] = 0;
+        this.bars[i] = 0;
       }
-      this.keys = keys;
       this.isConfiguring = false;
       console.log('configuring ends!', this.isConfiguring);
     },
@@ -110,11 +123,24 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
-#wrapper {
+#keyboard {
   display: flex;
   position: fixed;
   bottom: 0;
   width: 100%;
   align-items: flex-end;
+  align-content: center;
+}
+#sheet {
+  display: flex;
+  position: fixed;
+  width: 100%;
+  align-items: flex-end;
+  align-content: center;
+}
+body {
+  background-color: rgb(59, 54, 54);
+  margin: 0;
+  padding: 0;
 }
 </style>

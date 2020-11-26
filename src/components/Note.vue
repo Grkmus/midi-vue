@@ -1,11 +1,10 @@
 <template>
-  <div v-bind:class="{ pressed: velocity}" >
-  </div>
+  <div class="note"></div>
 </template>
 
 <script>
 export default {
-  name: 'Key',
+  name: 'Note',
   props: {
     velocity: Number,
     note: String,
@@ -16,15 +15,15 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-div {
-  width: 50px;
+.note {
+  width: auto;
+  position: relative;
   height: 150px;
-  border: solid;
-  background-color: whitesmoke;
-  margin: auto;  /* Magic! */
+  background-color: green;
+  margin: 0;
+  padding: 0;
 }
-
-.pressed {
+.playing {
   background-color: orangered;
 }
 </style>
