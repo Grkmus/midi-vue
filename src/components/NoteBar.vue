@@ -1,32 +1,37 @@
 <template>
   <div class="note-bar">
-    <div class="note" :style="note" :key="index" v-for="(note, index) in notes">
+    <div class="note"
+    :style="{transform: `translateY(${currentTick}px)`}"
+    :ref="index"
+    :key="index"
+    v-for="(note, index) in notes">
     </div>
   </div>
 </template>
 
 <script>
-// import Note from './Note.vue';
 
 export default {
   name: 'NoteBar',
   props: {
-    note: {
-      velocity: 0,
-      delta: 0,
-    },
+    currentTick: null,
   },
   data() {
     return {
+      counter: 0,
       notes: [],
+      height: 100,
+      start: null,
+      speed: 0.5,
     };
   },
   methods: {
     createNote() {
-      this.notes.push({
-        height: '500px',
-        top: '-500px',
+      this.$set(this.notes, this.counter, {
+        height: this.height,
+        transform: `translateY(${this.tick}px)`,
       });
+      this.counter += 1;
       console.log('Create note!');
     },
   },

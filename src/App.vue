@@ -3,13 +3,18 @@
     <div id="player">
       <input @change="readFile" type="file" name="midi" id="midi">
       <button @click="test" >{{isConfiguring}}</button>
+      <button @click="animate" >Animate</button>
     </div>
     <div id="sheet">
-      <note-bar :key="k" :ref="k" :note="v.note" v-for="(v, k) in bars">
+      <note-bar
+        :key="`bar${k}`"
+        :currentTick="currentTick"
+        :ref="`bar${k}`"
+        :note="v.note" v-for="(v, k) in bars">
       </note-bar>
     </div>
     <div id="keyboard">
-      <key :key="k" :velocity="v" v-for="(v, k) in keys"></key>
+      <key :key="`key${k}`" :velocity="v" v-for="(v, k) in keys"></key>
     </div>
   </div>
 </template>
@@ -43,7 +48,8 @@ export default {
       isConfiguring: false,
       start: 36,
       end: 96,
-      sheetLength: 0,
+      sheetLength: null,
+      currentTick: 0,
     };
   },
   created() {
@@ -57,16 +63,11 @@ export default {
       });
     }
     this.reader.addEventListener('load', (e) => this.playMidi(e));
-    this.player.on('midiEvent', (e) => {
-      console.log(e);
-      const { noteNumber, velocity, delta } = e;
-      if (e.name === 'Note on') this.playNoteFromSong(noteNumber, velocity, delta);
+    this.player.on('playing', () => {
+      if (this.currentTick === this.sheetLength) this.currentTick = 0;
+      this.currentTick += 1;
     });
-    this.player.on('playing', (e) => {
-      console.log(e);
-      this.$el.getElementsByClassName('note').style.top = `${this.amount}px`;
-      this.test();
-    });
+
     this.$on('noteon', (noteNumber) => {
       console.log(noteNumber);
       if (this.start) this.end = noteNumber;
@@ -86,17 +87,19 @@ export default {
       });
     });
   },
+  mounted() {
+    // console.log(this.$refs);
+    this.sheetLength = this.$refs.bar36[0].$el.offsetHeight;
+  },
   methods: {
+    animate() {
+      this.$refs.bar36[0].animate();
+    },
     test() {
       console.log('test');
       console.log();
-      this.$refs[63][0].createNote();
-      // if (this.amount === 700) this.amount = -150;
-      // this.$root.$emit('note63');
-      // this.$set(this.bars, 63, { note: { velocity: 10, delta: 30 } });
-      // console.log(this.$refs[63][0].createNote);
-      // console.log(this.$refs[63][0].$el.style.top);
-      // this.bars[63] = 5;
+      this.$refs.bar36[0].createNote();
+      this.$refs.bar37[0].createNote();
     },
     playMidi(event) {
       this.midiFile = event.target.result;
@@ -153,10 +156,12 @@ export default {
   height: 100%;
 }
 #player {
+  position: relative;
   display: flex;
   height: 5%;
   justify-content: center;
   background: #2c3e50;
+  z-index: 1;
 }
 #sheet {
   display: flex;
