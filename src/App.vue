@@ -6,12 +6,7 @@
       <button @click="animate" >Animate</button>
     </div>
     <div id="sheet">
-      <note-bar
-        :key="`bar${k}`"
-        :currentTick="currentTick"
-        :ref="`bar${k}`"
-        :note="v.note" v-for="(v, k) in bars">
-      </note-bar>
+      <runner :height="sheetHeight" :width="sheetWidth"></runner>
     </div>
     <div id="keyboard">
       <key :key="`key${k}`" :velocity="v" v-for="(v, k) in keys"></key>
@@ -23,15 +18,13 @@
 import MidiPlayer from 'midi-player-js';
 import WebMidi from 'webmidi';
 import Key from './components/Key.vue';
-import NoteBar from './components/NoteBar.vue';
-// import Note from './components/Note.vue';
+import Runner from './components/Runner.vue';
 
 export default {
   name: 'App',
   components: {
     Key,
-    // Note,
-    NoteBar,
+    Runner,
   },
   data() {
     return {
@@ -48,7 +41,8 @@ export default {
       isConfiguring: false,
       start: 36,
       end: 96,
-      sheetLength: null,
+      sheetHeight: null,
+      sheetWidth: null,
       currentTick: 0,
     };
   },
@@ -63,7 +57,8 @@ export default {
       });
     }
     this.reader.addEventListener('load', (e) => this.playMidi(e));
-    this.player.on('playing', () => {
+    this.player.on('playing', (e) => {
+      console.log(e);
       if (this.currentTick === this.sheetLength) this.currentTick = 0;
       this.currentTick += 1;
     });
@@ -88,8 +83,8 @@ export default {
     });
   },
   mounted() {
-    // console.log(this.$refs);
-    this.sheetLength = this.$refs.bar36[0].$el.offsetHeight;
+    this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
+    this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
   },
   methods: {
     animate() {
@@ -97,7 +92,6 @@ export default {
     },
     test() {
       console.log('test');
-      console.log();
       this.$refs.bar36[0].createNote();
       this.$refs.bar37[0].createNote();
     },

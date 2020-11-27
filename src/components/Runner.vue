@@ -1,9 +1,4 @@
 <template>
-  <!-- <vue-p5
-    @setup="setup"
-    @draw="draw"
-  >
-  </vue-p5> -->
   <div id="canvas"></div>
 </template>
 
@@ -65,7 +60,6 @@ export default {
           note.show();
         });
       };
-      // let h = window.innerHeight;
       s.draw = () => { // eslint-disable-line
         s.background(33, 33, 33);
         s.stroke(255);
@@ -73,7 +67,6 @@ export default {
         s.line(10, this.position, 500, this.position);
 
         notes.forEach((note) => {
-          // console.log(note);
           note.show();
           note.move(this.tempo);
         });
