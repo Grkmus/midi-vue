@@ -47,17 +47,7 @@ export default {
       s.draw = () => { // eslint-disable-line
         s.background(33, 33, 33);
         s.line(10, this.position, 500, this.position);
-
-        for (let i = this.lowestKey; i < this.highestKey; i += 1) {
-          const noteMark = this.notes[i];
-          _.forEach(noteMark.runningNotes, (note) => {
-            s.rect((i - 36) * 32, note.y += this.tempo, 32, note.h); // eslint-disable-line
-            if (note.y > this.height) this.$delete(this.runningNotes, i, note);
-          });
-        }
-
-        if (this.position >= this.height) this.position = 0;
-        this.position += this.tempo;
+        this.play(s);
       };
     };
     this.canvas = new P5(sketch, 'canvas');
@@ -96,6 +86,18 @@ export default {
           velocity: 0, y: 0, h: 0, isReaden: false, runningNotes: [],
         });
       }
+    },
+    play(s) {
+      for (let i = this.lowestKey; i < this.highestKey; i += 1) {
+        const noteMark = this.notes[i];
+        _.forEach(noteMark.runningNotes, (note) => {
+          s.rect((i - 36) * 32, note.y += this.tempo, 32, note.h); // eslint-disable-line
+          if (note.y > this.height) this.$delete(this.runningNotes, i, note);
+        });
+      }
+
+      if (this.position >= this.height) this.position = 0;
+      this.position += this.tempo;
     },
   },
 };
