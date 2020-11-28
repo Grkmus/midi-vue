@@ -19,7 +19,7 @@ export default {
 .key {
   width: 50px;
   height: auto;
-  border: solid;
+  border: 1px solid;
   background-color: whitesmoke;
   margin: 0;
   padding: 0;

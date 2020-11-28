@@ -2,11 +2,9 @@
   <div id="app">
     <div id="player">
       <input @change="readFile" type="file" name="midi" id="midi">
-      <button @click="test" >{{isConfiguring}}</button>
-      <button @click="animate" >Animate</button>
     </div>
     <div id="sheet">
-      <runner :height="sheetHeight" :width="sheetWidth"></runner>
+      <runner :height="sheetHeight" :width="sheetWidth" :keyWidth="keyWidth"></runner>
     </div>
     <div id="keyboard">
       <key :key="`key${k}`" :velocity="v" v-for="(v, k) in keys"></key>
@@ -43,6 +41,7 @@ export default {
       end: 96,
       sheetHeight: null,
       sheetWidth: null,
+      keyWidth: null,
       currentTick: 0,
     };
   },
@@ -59,6 +58,7 @@ export default {
     this.reader.addEventListener('load', (e) => this.playMidi(e));
 
     this.player.on('playing', (e) => {
+      // console.log(e.tick);
       this.$emit('playing', e.tick);
     });
 
@@ -91,19 +91,15 @@ export default {
   mounted() {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
+    this.keyWidth = this.$el.querySelector('.key').getBoundingClientRect().width;
   },
   methods: {
-    animate() {
-      this.$refs.bar36[0].animate();
-    },
-    test() {
-      console.log('test');
-      this.$refs.bar36[0].createNote();
-      this.$refs.bar37[0].createNote();
-    },
     playMidi(event) {
       this.midiFile = event.target.result;
       this.player.loadArrayBuffer(this.midiFile);
+      this.player.setTempo(1);
+      console.log(this.player.getTotalEvents());
+      console.log(this.player.getTotalTicks());
       this.player.play();
     },
     readFile() {

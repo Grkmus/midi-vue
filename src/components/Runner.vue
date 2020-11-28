@@ -11,6 +11,7 @@ export default {
   props: {
     width: null,
     height: null,
+    keyWidth: null,
   },
   data() {
     return {
@@ -22,6 +23,7 @@ export default {
       runningNotes: {},
       lowestKey: 36,
       highestKey: 96,
+      noteScaleFactor: 2,
     };
   },
   computed: {
@@ -36,6 +38,7 @@ export default {
       if (velocity > 0 && noteNumber) this.noteOn(noteNumber, velocity);
       else if (velocity === 0) this.noteOff(noteNumber, velocity);
     });
+
     this.$parent.$on('playing', (tick) => {
       this.counter = tick;
     });
@@ -62,13 +65,9 @@ export default {
         isReaden: false,
         timeStamp: this.timeStamp,
       });
-      console.log('midi event note ON', noteNumber, velocity);
     },
     noteOff(noteNumber) {
-      const note = this.notes[noteNumber];
-      const counter = (this.timeStamp - note.timeStamp) / 6.4;
-      console.log('The time span: ', counter);
-      console.log('current rnnint', this.notes[noteNumber]);
+      const counter = (this.timeStamp - this.notes[noteNumber].timeStamp) / this.noteScaleFactor;
       this.$set(this.notes[noteNumber], 'runningNotes', [
         ...this.notes[noteNumber].runningNotes,
         {
@@ -78,7 +77,6 @@ export default {
           isReaden: true,
         },
       ]);
-      console.log('midi event note OFF', noteNumber);
     },
     createNotes() {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
@@ -91,11 +89,10 @@ export default {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
         const noteMark = this.notes[i];
         _.forEach(noteMark.runningNotes, (note) => {
-          s.rect((i - 36) * 32, note.y += this.tempo, 32, note.h); // eslint-disable-line
+          s.rect((i - this.lowestKey) * this.keyWidth, note.y += this.tempo, this.keyWidth, note.h); // eslint-disable-line
           if (note.y > this.height) this.$delete(this.runningNotes, i, note);
         });
       }
-
       if (this.position >= this.height) this.position = 0;
       this.position += this.tempo;
     },
