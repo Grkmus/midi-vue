@@ -4,27 +4,7 @@
 
 <script>
 import P5 from 'p5';
-
-class Note {
-  constructor(x, h) {
-    this.y = -h;
-    this.x = x;
-    this.w = 50;
-    this.h = h;
-  }
-
-  get noteNumber() {
-    return this.noteNumber;
-  }
-
-  get measure() {
-    return this.measure;
-  }
-
-  move(amount) {
-    this.y += amount;
-  }
-}
+import _ from 'lodash';
 
 export default {
   name: 'Runner',
@@ -34,55 +14,88 @@ export default {
   },
   data() {
     return {
-      p5: null,
       canvas: null,
-      y: 0,
       tempo: 5,
       notes: [],
       position: 0,
+      counter: 0,
+      runningNotes: [],
     };
   },
+  computed: {
+    timeStamp() {
+      return _.cloneDeep(this.counter);
+    },
+  },
   mounted() {
+    this.createNotes();
+
+    this.$parent.$on('midievent', ({ noteNumber, velocity }) => {
+      if (velocity > 0 && noteNumber) this.noteOn(noteNumber, velocity);
+      else if (velocity === 0) this.noteOff(noteNumber, velocity);
+    });
+    this.$parent.$on('playing', (tick) => {
+      this.counter = tick;
+    });
+
     const sketch = (s) => {
-      console.log(s);
-      const note1 = new Note(800, 50);
-      const note2 = new Note(300, 100);
-      const notes = [note1, note2];
-
-      Note.prototype.show = function () {
-        s.fill(255);
-        s.rect(this.x, this.y, this.w, this.h);
-      };
-
       s.setup = () => { // eslint-disable-line
         s.createCanvas(this.width, this.height);
-        notes.forEach((note) => {
-          note.show();
-        });
       };
       s.draw = () => { // eslint-disable-line
         s.background(33, 33, 33);
-        s.stroke(255);
-
         s.line(10, this.position, 500, this.position);
 
-        notes.forEach((note) => {
-          note.show();
-          note.move(this.tempo);
-        });
+        for (let i = 0; i < this.runningNotes.length; i += 1) {
+          const note = this.runningNotes[i];
+          if (note.isReaden && !note.isPlayed) {
+            s.rect(note.noteNumber + i * 26, note.y += this.tempo, 26, note.h);
+          }
+          if (note.y > this.height) {
+            this.$delete(this.runningNotes, i, note);
+          }
+        }
+
         if (this.position >= this.height) this.position = 0;
         this.position += this.tempo;
       };
-
-      s.mousePressed = () => { // eslint-disable-line
-        console.log('mouse');
-        notes.push(new Note(500, 100));
-      };
     };
-
     this.canvas = new P5(sketch, 'canvas');
+  },
+  methods: {
+    noteOn(noteNumber, velocity) {
+      const noteIndex = noteNumber - 36;
+      this.$set(this.notes, noteIndex, {
+        velocity,
+        y: 0,
+        h: 0,
+        isReaden: false,
+        timeStamp: this.timeStamp,
+      });
+      console.log('midi event note ON', noteNumber, noteIndex);
+    },
+    noteOff(noteNumber) {
+      const noteIndex = noteNumber - 36;
+      const note = this.notes[noteIndex];
+      const counter = (this.timeStamp - note.timeStamp) / 10;
+      console.log('The time span: ', counter);
+      this.runningNotes.push({
+        noteNumber,
+        velocity: 0,
+        y: -counter,
+        h: counter,
+        isReaden: true,
+      });
+
+      console.log('midi event note OFF', noteNumber, noteIndex);
+    },
+    createNotes() {
+      for (let i = 0; i < 61; i += 1) {
+        this.notes.push({
+          velocity: 0, y: 0, h: 0, isReaden: false,
+        });
+      }
+    },
   },
 };
 </script>
-
-<!-- Add "scoped" attribute to limit CSS to this component only -->

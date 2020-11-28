@@ -57,10 +57,16 @@ export default {
       });
     }
     this.reader.addEventListener('load', (e) => this.playMidi(e));
+
     this.player.on('playing', (e) => {
-      console.log(e);
-      if (this.currentTick === this.sheetLength) this.currentTick = 0;
-      this.currentTick += 1;
+      this.$emit('playing', e.tick);
+    });
+
+    this.player.on('midiEvent', (e) => {
+      const {
+        noteNumber, velocity,
+      } = e;
+      this.$emit('midievent', { noteNumber, velocity });
     });
 
     this.$on('noteon', (noteNumber) => {
