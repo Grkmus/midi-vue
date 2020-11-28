@@ -15,11 +15,13 @@ export default {
   data() {
     return {
       canvas: null,
-      tempo: 5,
-      notes: [],
+      tempo: 4.1,
+      notes: {},
       position: 0,
       counter: 0,
-      runningNotes: [],
+      runningNotes: {},
+      lowestKey: 36,
+      highestKey: 96,
     };
   },
   computed: {
@@ -46,14 +48,12 @@ export default {
         s.background(33, 33, 33);
         s.line(10, this.position, 500, this.position);
 
-        for (let i = 0; i < this.runningNotes.length; i += 1) {
-          const note = this.runningNotes[i];
-          if (note.isReaden && !note.isPlayed) {
-            s.rect(note.noteNumber + i * 26, note.y += this.tempo, 26, note.h);
-          }
-          if (note.y > this.height) {
-            this.$delete(this.runningNotes, i, note);
-          }
+        for (let i = this.lowestKey; i < this.highestKey; i += 1) {
+          const noteMark = this.notes[i];
+          _.forEach(noteMark.runningNotes, (note) => {
+            s.rect((i - 36) * 32, note.y += this.tempo, 32, note.h); // eslint-disable-line
+            if (note.y > this.height) this.$delete(this.runningNotes, i, note);
+          });
         }
 
         if (this.position >= this.height) this.position = 0;
@@ -64,35 +64,36 @@ export default {
   },
   methods: {
     noteOn(noteNumber, velocity) {
-      const noteIndex = noteNumber - 36;
-      this.$set(this.notes, noteIndex, {
+      this.$set(this.notes, noteNumber, {
+        ...this.notes[noteNumber],
         velocity,
         y: 0,
         h: 0,
         isReaden: false,
         timeStamp: this.timeStamp,
       });
-      console.log('midi event note ON', noteNumber, noteIndex);
+      console.log('midi event note ON', noteNumber, velocity);
     },
     noteOff(noteNumber) {
-      const noteIndex = noteNumber - 36;
-      const note = this.notes[noteIndex];
-      const counter = (this.timeStamp - note.timeStamp) / 10;
+      const note = this.notes[noteNumber];
+      const counter = (this.timeStamp - note.timeStamp) / 6.4;
       console.log('The time span: ', counter);
-      this.runningNotes.push({
-        noteNumber,
-        velocity: 0,
-        y: -counter,
-        h: counter,
-        isReaden: true,
-      });
-
-      console.log('midi event note OFF', noteNumber, noteIndex);
+      console.log('current rnnint', this.notes[noteNumber]);
+      this.$set(this.notes[noteNumber], 'runningNotes', [
+        ...this.notes[noteNumber].runningNotes,
+        {
+          velocity: 0,
+          y: -counter,
+          h: counter,
+          isReaden: true,
+        },
+      ]);
+      console.log('midi event note OFF', noteNumber);
     },
     createNotes() {
-      for (let i = 0; i < 61; i += 1) {
-        this.notes.push({
-          velocity: 0, y: 0, h: 0, isReaden: false,
+      for (let i = this.lowestKey; i < this.highestKey; i += 1) {
+        this.$set(this.notes, i, {
+          velocity: 0, y: 0, h: 0, isReaden: false, runningNotes: [],
         });
       }
     },
