@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <div id="player">
-      <input type="file" ref="filereader" name="midi" id="filereader">
+      <input @change="readFile" type="file" ref="filereader" name="midi" id="filereader">
+      <!-- <button @click="readMidi">Read</button> -->
       <button @click="playMidi">Play</button>
     </div>
     <div id="sheet">
@@ -18,9 +19,8 @@
 </template>
 
 <script>
-import MidiPlayer from 'midi-player-js';
 import WebMidi from 'webmidi';
-import MidiParser from 'midi-parser-js';
+import { Midi } from '@tonejs/midi';
 import _ from 'lodash';
 import Key from './components/Key.vue';
 import Runner from './components/Runner.vue';
@@ -33,10 +33,10 @@ export default {
   },
   data() {
     return {
-      player: new MidiPlayer.Player(),
       inputs: Array,
       outputs: Array,
       keys: {},
+      reader: new FileReader(),
       midiAccess: null,
       midiDevice: null,
       start: 36,
@@ -72,10 +72,14 @@ export default {
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
     this.keyWidth = this.$el.querySelector('.key').getBoundingClientRect().width;
     this.source = this.$refs.filereader;
-    // provide the File source and a callback function
-    MidiParser.parse(this.source, (obj) => {
-      this.midiJson = obj;
-      this.readMidi();
+
+    this.reader.addEventListener('onerror', (e) => {
+      console.log('load different.', e);
+    });
+    this.reader.addEventListener('load', (e) => {
+      console.log('reading file', e.target.result);
+      this.midiJson = new Midi(e.target.result);
+      console.log('Loaded midi file: ', this.midiJson);
     });
   },
   computed: {
@@ -87,14 +91,9 @@ export default {
     playNote(noteNumber, velocity) {
       this.$set(this.keys, noteNumber, velocity);
     },
-
-    readMidi() {
-      let timeStamp = 0;
-      this.midiJson.track[1].event.forEach((event) => {
-        console.log(event);
-        timeStamp += event.deltaTime;
-        event.timeStamp = timeStamp; //eslint-disable-line
-      });
+    readFile() {
+      // triggers the load event!
+      this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
     },
     playMidi() {
       this.$refs.runner.playMidi();
@@ -105,9 +104,6 @@ export default {
 
 <style>
 #app {
-  /* display: flex;
-  flex-wrap: nowrap;
-  flex-direction: column; */
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

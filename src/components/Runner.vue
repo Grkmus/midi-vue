@@ -16,21 +16,13 @@ export default {
   },
   data() {
     return {
-      canvas: null,
-      tempo: 3,
+      tempo: 5,
       notes: {},
       position: 0,
-      counter: 0,
-      runningNotes: {},
       lowestKey: 36,
       highestKey: 96,
-      noteScaleFactor: 12,
+      noteScaleFactor: 2,
     };
-  },
-  computed: {
-    timeStamp() {
-      return _.cloneDeep(this.counter);
-    },
   },
   mounted() {
     this.createNotes();
@@ -53,68 +45,47 @@ export default {
         this.play(s);
       };
     };
-    this.canvas = new P5(sketch, 'canvas');
+    new P5(sketch, 'canvas'); //eslint-disable-line
   },
   methods: {
-    noteOn(noteNumber, velocity, deltaTime) {
-      this.$set(this.notes, noteNumber, {
+    parseNote(noteNumber, durationTick, currentTick) {
+      const adjustedHeight = Math.round(durationTick / this.noteScaleFactor);
+      const adjustedStart = Math.round(-currentTick / this.noteScaleFactor);
+      this.$set(this.notes, noteNumber, [
         ...this.notes[noteNumber],
-        velocity,
-        y: 0,
-        h: 0,
-        isReaden: false,
-        deltaTime,
-      });
-    },
-    noteOff(noteNumber, deltaTime, timeStamp) {
-      // const counter = (deltaTime - this.notes[noteNumber].deltaTime) / 12;
-      console.log(noteNumber, deltaTime, timeStamp);
-      this.$set(this.notes[noteNumber], 'runningNotes', [
-        ...this.notes[noteNumber].runningNotes,
         {
           velocity: 0,
-          y: -timeStamp / this.noteScaleFactor,
-          h: deltaTime / this.noteScaleFactor,
+          y: adjustedStart,
+          h: -adjustedHeight,
           isReaden: true,
         },
       ]);
     },
     createNotes() {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
-        this.$set(this.notes, i, {
-          velocity: 0, y: 0, h: 0, isReaden: false, runningNotes: [],
-        });
+        this.$set(this.notes, i, []);
       }
     },
     play(s) {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
         const noteMark = this.notes[i];
-        _.forEach(noteMark.runningNotes, (note) => {
-          s.rect((i - this.lowestKey) * this.keyWidth, note.y += this.tempo, this.keyWidth, note.h); // eslint-disable-line
-          // if (note.y > this.height) this.$delete(this.runningNotes, i, note);
+        _.forEach(noteMark, (note) => {
+          s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
         });
       }
       if (this.position >= this.height) this.position = 0;
       this.position += this.tempo;
     },
     playMidi() {
-      this.midiJson.track[1].event.forEach((event) => {
-        const { data, deltaTime, timeStamp } = event;
-        if (data && Number.isInteger(data[0])) {
-          const noteNumber = data[0];
-          // const velocity = data[1];
-          // console.log(noteNumber, velocity, deltaTime, timeStamp);
-          this.noteOff(noteNumber, deltaTime, timeStamp);
-        }
-        // if (velocity === 0) this.noteOff(noteNumber, deltaTime, timeStamp);
-        // this.noteOff(noteNumber, deltaTime, timeStamp);
-        // if (velocity > 0 && noteNumber) this.noteOn(noteNumber, velocity, deltaTime);
-        // else if (velocity === 0) this.noteOff(noteNumber, deltaTime, timeStamp);
+      this.midiJson.tracks.forEach((track) => {
+        track.notes.forEach((note) => {
+          const { midi, durationTicks, ticks } = note;
+          this.parseNote(midi, durationTicks, ticks);
+        });
       });
-      // this.$parent.$on('midievent', ({ data, deltaTime }) => {
-      //   console.log(noteNumber, velocity);
-      //   s.loop();
-      // });
+    },
+    getPositionX(noteNumber) {
+      return (noteNumber - this.lowestKey) * this.keyWidth;
     },
   },
 };
