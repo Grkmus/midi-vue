@@ -1,10 +1,15 @@
 <template>
   <div id="app">
     <div id="player">
-      <input @change="readFile" type="file" name="midi" id="midi">
+      <input type="file" ref="filereader" name="midi" id="filereader">
+      <button @click="playMidi">Play</button>
     </div>
     <div id="sheet">
-      <runner :height="sheetHeight" :width="sheetWidth" :keyWidth="keyWidth"></runner>
+      <runner ref="runner"
+      :midiJson="midiJson"
+      :height="sheetHeight"
+      :width="sheetWidth"
+      :keyWidth="keyWidth"></runner>
     </div>
     <div id="keyboard">
       <key :key="`key${k}`" :velocity="v" v-for="(v, k) in keys"></key>
@@ -15,6 +20,8 @@
 <script>
 import MidiPlayer from 'midi-player-js';
 import WebMidi from 'webmidi';
+import MidiParser from 'midi-parser-js';
+import _ from 'lodash';
 import Key from './components/Key.vue';
 import Runner from './components/Runner.vue';
 
@@ -27,54 +34,26 @@ export default {
   data() {
     return {
       player: new MidiPlayer.Player(),
-      midiFile: null,
-      dataUri: null,
-      reader: new FileReader(),
       inputs: Array,
       outputs: Array,
       keys: {},
-      bars: {},
       midiAccess: null,
       midiDevice: null,
-      isConfiguring: false,
       start: 36,
       end: 96,
       sheetHeight: null,
       sheetWidth: null,
       keyWidth: null,
       currentTick: 0,
+      midiJson: null,
+      source: null,
+      tempo: null,
     };
   },
   created() {
     for (let i = this.start; i < this.end; i += 1) {
       this.$set(this.keys, i, 0);
-      this.$set(this.bars, i, {
-        note: {
-          velocity: 0,
-          delta: 0,
-        },
-      });
     }
-    this.reader.addEventListener('load', (e) => this.playMidi(e));
-
-    this.player.on('playing', (e) => {
-      // console.log(e.tick);
-      this.$emit('playing', e.tick);
-    });
-
-    this.player.on('midiEvent', (e) => {
-      const {
-        noteNumber, velocity,
-      } = e;
-      this.$emit('midievent', { noteNumber, velocity });
-    });
-
-    this.$on('noteon', (noteNumber) => {
-      console.log(noteNumber);
-      if (this.start) this.end = noteNumber;
-      else this.start = noteNumber;
-      if (this.start && this.end) { this.doConfigure(this.start, this.end); }
-    });
     WebMidi.enable(() => {
       console.log(WebMidi.inputs);
       console.log(WebMidi.outputs);
@@ -92,47 +71,33 @@ export default {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
     this.keyWidth = this.$el.querySelector('.key').getBoundingClientRect().width;
+    this.source = this.$refs.filereader;
+    // provide the File source and a callback function
+    MidiParser.parse(this.source, (obj) => {
+      this.midiJson = obj;
+      this.readMidi();
+    });
+  },
+  computed: {
+    totalTime() {
+      return _.sumBy(this.midiJson.track[1].event, 'deltaTime');
+    },
   },
   methods: {
-    playMidi(event) {
-      this.midiFile = event.target.result;
-      this.player.loadArrayBuffer(this.midiFile);
-      this.player.setTempo(1);
-      console.log(this.player.getTotalEvents());
-      console.log(this.player.getTotalTicks());
-      this.player.play();
-    },
-    readFile() {
-      // triggers the load event!
-      this.reader.readAsArrayBuffer(document.getElementById('midi').files[0]);
-    },
     playNote(noteNumber, velocity) {
       this.$set(this.keys, noteNumber, velocity);
     },
-    playNoteFromSong(noteNumber, velocity, delta) {
-      console.log('Playing: ', noteNumber, velocity, delta);
-      console.log({ velocity, delta });
-      console.log(this.bars[noteNumber]);
-      this.$set(this.bars, noteNumber, { velocity, delta });
-    },
-    configure() {
-      this.isConfiguring = true;
-      this.start = null;
-      this.end = null;
-      this.$on('noteon', (noteNumber) => {
-        console.log(noteNumber);
-        if (this.start) this.end = noteNumber;
-        else this.start = noteNumber;
+
+    readMidi() {
+      let timeStamp = 0;
+      this.midiJson.track[1].event.forEach((event) => {
+        console.log(event);
+        timeStamp += event.deltaTime;
+        event.timeStamp = timeStamp; //eslint-disable-line
       });
-      if (this.start && this.end) { this.doConfigure(this.start, this.end); }
     },
-    doConfigure() {
-      for (let i = this.start; i < this.end; i += 1) {
-        this.keys[i] = 0;
-        this.bars[i] = 0;
-      }
-      this.isConfiguring = false;
-      console.log('configuring ends!', this.isConfiguring);
+    playMidi() {
+      this.$refs.runner.playMidi();
     },
   },
 };
