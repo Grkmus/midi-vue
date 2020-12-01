@@ -4,7 +4,7 @@
 
 <script>
 import P5 from 'p5';
-import _ from 'lodash';
+// import _ from 'lodash';
 
 export default {
   name: 'Runner',
@@ -18,7 +18,6 @@ export default {
     return {
       tempo: 5,
       notes: {},
-      position: 0,
       lowestKey: 36,
       highestKey: 96,
       noteScaleFactor: 2,
@@ -26,26 +25,7 @@ export default {
   },
   mounted() {
     this.createNotes();
-
-    this.$parent.$on('playing', (tick) => {
-      this.counter = tick;
-    });
-
-    const sketch = (s) => {
-      s.setup = () => { // eslint-disable-line
-        s.createCanvas(this.width, this.height);
-        s.stroke(255);
-      };
-      s.draw = () => { // eslint-disable-line
-        s.background(33, 33, 33);
-        for (let i = 0; i < this.height; i += 80) {
-          s.line(0, i, this.width, i);
-        }
-        s.line(10, this.position, 500, this.position);
-        this.play(s);
-      };
-    };
-    new P5(sketch, 'canvas'); //eslint-disable-line
+    this.render();
   },
   methods: {
     parseNote(noteNumber, durationTick, currentTick) {
@@ -66,15 +46,22 @@ export default {
         this.$set(this.notes, i, []);
       }
     },
-    play(s) {
+    drawNotes(s) {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
-        const noteMark = this.notes[i];
-        _.forEach(noteMark, (note) => {
+        const availableNotes = this.notes[i];
+        for (let k = 0; k < availableNotes.length; k += 1) {
+          const note = availableNotes[k];
+          if (note.y + note.h > this.height) availableNotes.splice(k, 1);
           s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
-        });
+        }
       }
       if (this.position >= this.height) this.position = 0;
       this.position += this.tempo;
+    },
+    drawDivisions(s) {
+      for (let i = 0; i < this.height; i += 80) {
+        s.line(0, i, this.width, i);
+      }
     },
     playMidi() {
       this.midiJson.tracks.forEach((track) => {
@@ -86,6 +73,21 @@ export default {
     },
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
+    },
+    render() {
+      const sketch = (s) => {
+        s.setup = () => { // eslint-disable-line
+          s.createCanvas(this.width, this.height);
+          s.stroke(255);
+        };
+        s.draw = () => { // eslint-disable-line
+          s.background(33, 33, 33);
+          s.stroke(255);
+          this.drawDivisions(s);
+          this.drawNotes(s);
+        };
+      };
+      new P5(sketch, 'canvas'); //eslint-disable-line
     },
   },
 };

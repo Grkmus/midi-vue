@@ -14,7 +14,7 @@
     "midi-parser-js": "^4.0.4",
     "midi-player-js": "^2.0.13",
     "p5": "^1.1.9",
-    "vue": "^2.6.11",
+    "vue": "^2.6.12",
     "webmidi": "^2.5.1"
   },
   "devDependencies": {
