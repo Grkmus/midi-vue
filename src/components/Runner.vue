@@ -31,6 +31,10 @@ export default {
     document.addEventListener('keydown', (this.keyDown));
     document.addEventListener('keyup', this.keyUp);
   },
+  computed: {
+    green() { return { r: 52, g: 206, b: 77 }; },
+    red() { return { r: 213, g: 7, b: 76 }; },
+  },
   methods: {
     parseNote(noteNumber, durationTick, currentTick) {
       const adjustedHeight = Math.round(durationTick / this.noteScaleFactor);
@@ -38,6 +42,7 @@ export default {
       this.$set(this.notes, noteNumber, [
         ...this.notes[noteNumber],
         {
+          color: { r: 255, g: 255, b: 255 },
           velocity: 0,
           y: adjustedStart,
           h: -adjustedHeight,
@@ -55,19 +60,20 @@ export default {
         const availableNotes = this.notes[i];
         for (let k = 0; k < availableNotes.length; k += 1) {
           const note = availableNotes[k];
-          s.fill(255);
-          if (this.keyPlayedCondition(note) && this.isKeyPressed) {
-            s.rect(500, 60, 60, 60);
-          }
+          if (this.isKeyShouldBePressed(note) && this.isKeyPressed) note.color = this.green;
+          else if (this.isKeyShouldBePressed(note) && !this.isKeyPressed) note.color = this.red;
+
           if (note.y + note.h > this.height) availableNotes.splice(k, 1);
           s.textSize(32);
           s.text(note.y, 10, note.y += this.tempo);
+          s.fill(note.color.r, note.color.g, note.color.b);
           s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
         }
       }
       if (this.position >= this.height) this.position = 0;
       this.position += this.tempo;
     },
+
     drawDivisions(s) {
       for (let i = 0; i < this.height; i += 80) {
         s.line(0, i, this.width, i);
@@ -92,7 +98,7 @@ export default {
       console.log(false);
       this.isKeyPressed = false;
     },
-    keyPlayedCondition(note) {
+    isKeyShouldBePressed(note) {
       return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
     },
     render() {
