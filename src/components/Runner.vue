@@ -16,16 +16,20 @@ export default {
   },
   data() {
     return {
-      tempo: 5,
+      tempo: 2,
       notes: {},
       lowestKey: 36,
       highestKey: 96,
       noteScaleFactor: 2,
+      isKeyPressed: false,
+      keyPressMargin: 10,
     };
   },
   mounted() {
     this.createNotes();
     this.render();
+    document.addEventListener('keydown', (this.keyDown));
+    document.addEventListener('keyup', this.keyUp);
   },
   methods: {
     parseNote(noteNumber, durationTick, currentTick) {
@@ -51,7 +55,13 @@ export default {
         const availableNotes = this.notes[i];
         for (let k = 0; k < availableNotes.length; k += 1) {
           const note = availableNotes[k];
+          s.fill(255);
+          if (this.keyPlayedCondition(note) && this.isKeyPressed) {
+            s.rect(500, 60, 60, 60);
+          }
           if (note.y + note.h > this.height) availableNotes.splice(k, 1);
+          s.textSize(32);
+          s.text(note.y, 10, note.y += this.tempo);
           s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
         }
       }
@@ -73,6 +83,17 @@ export default {
     },
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
+    },
+    keyDown() {
+      console.log(true);
+      this.isKeyPressed = true;
+    },
+    keyUp() {
+      console.log(false);
+      this.isKeyPressed = false;
+    },
+    keyPlayedCondition(note) {
+      return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
     },
     render() {
       const sketch = (s) => {
