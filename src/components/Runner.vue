@@ -22,18 +22,33 @@ export default {
       highestKey: 96,
       noteScaleFactor: 2,
       isKeyPressed: false,
+      isKeyBeingPressed: false,
       keyPressMargin: 10,
     };
   },
   mounted() {
     this.createNotes();
     this.render();
-    document.addEventListener('keydown', (this.keyDown));
+    document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
   },
   computed: {
-    green() { return { r: 52, g: 206, b: 77 }; },
-    red() { return { r: 213, g: 7, b: 76 }; },
+    green() { return [52, 206, 77]; },
+    red() { return [213, 7, 76]; },
+    blue() { return [3, 132, 252]; },
+    keyTriggerArea() {
+      return this.height - this.keyPressMargin;
+    },
+  },
+  watch: {
+    isKeyPressed(newVal) {
+      console.log('isKeypressed');
+      console.log(newVal);
+    },
+    isKeyBeingPressed(newVal) {
+      console.log('isKeyBeingPressed');
+      console.log(newVal);
+    },
   },
   methods: {
     parseNote(noteNumber, durationTick, currentTick) {
@@ -42,7 +57,7 @@ export default {
       this.$set(this.notes, noteNumber, [
         ...this.notes[noteNumber],
         {
-          color: { r: 255, g: 255, b: 255 },
+          color: [255, 255, 255],
           velocity: 0,
           y: adjustedStart,
           h: -adjustedHeight,
@@ -60,13 +75,16 @@ export default {
         const availableNotes = this.notes[i];
         for (let k = 0; k < availableNotes.length; k += 1) {
           const note = availableNotes[k];
-          if (this.isKeyShouldBePressed(note) && this.isKeyPressed) note.color = this.green;
-          else if (this.isKeyShouldBePressed(note) && !this.isKeyPressed) note.color = this.red;
+          if (this.isKeyNeedTrigger(note) && this.isKeyPressed) note.color = this.green;
+          else if (this.isKeyNeedTrigger(note) && !this.isKeyPressed) note.color = this.red;
+          else if (this.isKeyNeedPressed(note) && this.isKeyBeingPressed) note.color = this.blue;
 
           if (note.y + note.h > this.height) availableNotes.splice(k, 1);
           s.textSize(32);
-          s.text(note.y, 10, note.y += this.tempo);
-          s.fill(note.color.r, note.color.g, note.color.b);
+          s.text(note.y + note.h, 10, 60);
+          s.text(this.height, 10, 120);
+          s.text(note.h, 120, 120);
+          s.fill(note.color[0], note.color[1], note.color[2]);
           s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
         }
       }
@@ -90,16 +108,21 @@ export default {
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
     },
-    keyDown() {
-      console.log(true);
-      this.isKeyPressed = true;
+    keyDown(e) {
+      if (e.repeat) {
+        this.isKeyBeingPressed = true;
+        this.isKeyPressed = false;
+      } else this.isKeyPressed = true;
     },
     keyUp() {
-      console.log(false);
       this.isKeyPressed = false;
+      this.isKeyBeingPressed = false;
     },
-    isKeyShouldBePressed(note) {
+    isKeyNeedTrigger(note) {
       return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
+    },
+    isKeyNeedPressed(note) {
+      return note.y > this.height && note.y + note.h < this.height;
     },
     render() {
       const sketch = (s) => {
