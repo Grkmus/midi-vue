@@ -4,7 +4,8 @@
 
 <script>
 import P5 from 'p5';
-// import _ from 'lodash';
+import { Midi } from 'tone';
+import { Piano } from '@tonejs/piano';
 
 export default {
   name: 'Runner',
@@ -20,10 +21,12 @@ export default {
       notes: {},
       lowestKey: 36,
       highestKey: 96,
-      noteScaleFactor: 2,
+      noteScaleFactor: 1,
       isKeyPressed: false,
       isKeyBeingPressed: false,
-      keyPressMargin: 10,
+      sketch: null,
+      synth: null,
+      noteOns: new Set(),
     };
   },
   mounted() {
@@ -31,14 +34,20 @@ export default {
     this.render();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
+    this.piano = new Piano({
+      velocities: 2,
+    });
+    this.piano.toDestination();
+    this.piano.load().then(() => {
+      console.log('loaded!');
+    });
   },
   computed: {
     green() { return [52, 206, 77]; },
     red() { return [213, 7, 76]; },
     blue() { return [3, 132, 252]; },
-    keyTriggerArea() {
-      return this.height - this.keyPressMargin;
-    },
+    keyTriggerArea() { return this.height - this.keyPressMargin; },
+    keyPressMargin() { return this.tempo * 5; },
   },
   watch: {
     isKeyPressed(newVal) {
@@ -57,11 +66,12 @@ export default {
       this.$set(this.notes, noteNumber, [
         ...this.notes[noteNumber],
         {
+          frequency: Midi(noteNumber).toNote(),
           color: [255, 255, 255],
           velocity: 0,
           y: adjustedStart,
           h: -adjustedHeight,
-          isReaden: true,
+          isOpen: false,
         },
       ]);
     },
@@ -70,31 +80,33 @@ export default {
         this.$set(this.notes, i, []);
       }
     },
-    drawNotes(s) {
+    drawNotes() {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
         const availableNotes = this.notes[i];
         for (let k = 0; k < availableNotes.length; k += 1) {
           const note = availableNotes[k];
-          if (this.isKeyNeedTrigger(note) && this.isKeyPressed) note.color = this.green;
-          else if (this.isKeyNeedTrigger(note) && !this.isKeyPressed) note.color = this.red;
-          else if (this.isKeyNeedPressed(note) && this.isKeyBeingPressed) note.color = this.blue;
+          if (this.isKeyNeedTrigger(note) && this.isKeyPressed) {
+            this.noteOn(note.frequency);
+            note.color = this.green;
+          }
 
-          if (note.y + note.h > this.height) availableNotes.splice(k, 1);
-          s.textSize(32);
-          s.text(note.y + note.h, 10, 60);
-          s.text(this.height, 10, 120);
-          s.text(note.h, 120, 120);
-          s.fill(note.color[0], note.color[1], note.color[2]);
-          s.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
+          if (note.y + note.h > this.height) {
+            this.noteOff(note.frequency);
+            availableNotes.splice(k, 1);
+          }
+          this.sketch.stroke(255);
+          this.sketch.line(0, this.height - this.keyPressMargin, this.width, this.height - this.keyPressMargin); //eslint-disable-line
+          this.sketch.fill(note.color[0], note.color[1], note.color[2]);
+          this.sketch.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
         }
       }
       if (this.position >= this.height) this.position = 0;
       this.position += this.tempo;
     },
 
-    drawDivisions(s) {
+    drawDivisions() {
       for (let i = 0; i < this.height; i += 80) {
-        s.line(0, i, this.width, i);
+        this.sketch.line(0, i, this.width, i);
       }
     },
     playMidi() {
@@ -133,11 +145,20 @@ export default {
         s.draw = () => { // eslint-disable-line
           s.background(33, 33, 33);
           s.stroke(255);
-          this.drawDivisions(s);
+          // this.drawDivisions(s);
+          s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea); //eslint-disable-line
           this.drawNotes(s);
         };
+        this.sketch = s;
       };
       new P5(sketch, 'canvas'); //eslint-disable-line
+    },
+    noteOn(frequency) {
+      console.log('Note ON: ', frequency);
+      this.piano.keyDown({ note: frequency });
+    },
+    noteOff(frequency) {
+      this.piano.keyUp({ note: frequency });
     },
   },
 };

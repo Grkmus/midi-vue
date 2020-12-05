@@ -9,11 +9,13 @@
   },
   "dependencies": {
     "@tonejs/midi": "^2.0.25",
+    "@tonejs/piano": "^0.2.1",
     "core-js": "^3.6.5",
     "lodash": "^4.17.20",
     "midi-parser-js": "^4.0.4",
     "midi-player-js": "^2.0.13",
     "p5": "^1.1.9",
+    "tone": "^14.7.58",
     "vue": "^2.6.12",
     "webmidi": "^2.5.1"
   },
