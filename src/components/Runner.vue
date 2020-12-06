@@ -7,6 +7,7 @@ import WebMidi from 'webmidi';
 import P5 from 'p5';
 import { Midi } from 'tone';
 import { Piano } from '@tonejs/piano';
+import _ from 'lodash';
 
 export default {
   name: 'Runner',
@@ -64,6 +65,10 @@ export default {
     blue() { return [3, 132, 252]; },
     keyTriggerArea() { return this.height - this.keyPressMargin; },
     keyPressMargin() { return this.tempo * 5; },
+    minimumMeasure() {
+      const allNotes = _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]);
+      return Math.ceil(_.minBy(allNotes, (note) => note.durationTicks).durationTicks / 20) * 20;
+    },
   },
   watch: {
     isKeyPressed(newVal) {
@@ -76,21 +81,6 @@ export default {
     },
   },
   methods: {
-    parseNote(noteNumber, durationTick, currentTick) {
-      const adjustedHeight = Math.round(durationTick / this.noteScaleFactor);
-      const adjustedStart = Math.round(-currentTick / this.noteScaleFactor);
-      this.$set(this.notes, noteNumber, [
-        ...this.notes[noteNumber],
-        {
-          noteName: Midi(noteNumber).toNote(),
-          color: [255, 255, 255],
-          velocity: 0,
-          y: adjustedStart,
-          h: -adjustedHeight,
-          isOpen: false,
-        },
-      ]);
-    },
     createNotes() {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
         this.$set(this.notes, i, []);
@@ -108,9 +98,8 @@ export default {
         }
       }
     },
-
     drawDivisions() {
-      for (let i = 0; i < this.height; i += 80) {
+      for (let i = 0; i < this.height; i += this.minimumMeasure) {
         this.sketch.line(0, i, this.width, i);
       }
     },
@@ -124,15 +113,32 @@ export default {
       });
       this.sketch.loop();
     },
+    parseNote(noteNumber, durationTick, currentTick) {
+      const adjustedHeight = Math.round(durationTick / this.noteScaleFactor);
+      const adjustedStart = Math.round(-currentTick / this.noteScaleFactor);
+      this.$set(this.notes, noteNumber, [
+        ...this.notes[noteNumber],
+        {
+          noteName: Midi(noteNumber).toNote(),
+          color: [255, 255, 255],
+          velocity: 0,
+          y: adjustedStart,
+          h: -adjustedHeight,
+          isOpen: false,
+        },
+      ]);
+    },
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
     },
-    // keyDown(noteNumber) {
-    //   this.$set(this.keys, noteNumber, true);
-    // },
-    // keyUp(noteNumber) {
-    //   this.$set(this.keys, noteNumber, false);
-    // },
+    keyDown() {
+      this.sketch.noLoop();
+      // this.$set(this.keys, noteNumber, true);
+    },
+    keyUp() {
+      this.sketch.loop();
+      // this.$set(this.keys, noteNumber, false);
+    },
     isKeyNeedTrigger(note) {
       return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
     },
@@ -149,7 +155,8 @@ export default {
         s.draw = () => { // eslint-disable-line
           s.background(33, 33, 33);
           this.drawDivisions(s);
-          s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea, 0, 0); //eslint-disable-line
+          // s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea, 0, 0);
+          //eslint-disable-line
           s.translate(0, position += this.tempo);
           this.drawNotes(s);
         };
