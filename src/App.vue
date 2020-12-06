@@ -71,8 +71,8 @@ export default {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
     this.keyWidth = this.$el.querySelector('.key').getBoundingClientRect().width;
-    this.source = this.$refs.filereader;
 
+    this.source = this.$refs.filereader;
     this.reader.addEventListener('onerror', (e) => {
       console.log('load different.', e);
     });

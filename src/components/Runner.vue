@@ -3,6 +3,7 @@
 </template>
 
 <script>
+import WebMidi from 'webmidi';
 import P5 from 'p5';
 import { Midi } from 'tone';
 import { Piano } from '@tonejs/piano';
@@ -17,8 +18,9 @@ export default {
   },
   data() {
     return {
-      tempo: 2,
+      tempo: 5,
       notes: {},
+      keys: {},
       lowestKey: 36,
       highestKey: 96,
       noteScaleFactor: 1,
@@ -27,6 +29,7 @@ export default {
       sketch: null,
       synth: null,
       noteOns: new Set(),
+      standardQuarterNote: 240,
     };
   },
   mounted() {
@@ -40,6 +43,19 @@ export default {
     this.piano.toDestination();
     this.piano.load().then(() => {
       console.log('loaded!');
+    });
+    WebMidi.enable(() => {
+      console.log(WebMidi.inputs);
+      console.log(WebMidi.outputs);
+      this.midiDevice = WebMidi.getInputByName('GO:KEYS');
+      this.midiDevice.addListener('noteon', 'all', (e) => {
+        console.log(e);
+        this.noteOn(e.note.number);
+      });
+      this.midiDevice.addListener('noteoff', 'all', (e) => {
+        console.log(e);
+        this.noteOff(e.note.number);
+      });
     });
   },
   computed: {
@@ -66,7 +82,7 @@ export default {
       this.$set(this.notes, noteNumber, [
         ...this.notes[noteNumber],
         {
-          frequency: Midi(noteNumber).toNote(),
+          noteName: Midi(noteNumber).toNote(),
           color: [255, 255, 255],
           velocity: 0,
           y: adjustedStart,
@@ -78,6 +94,7 @@ export default {
     createNotes() {
       for (let i = this.lowestKey; i < this.highestKey; i += 1) {
         this.$set(this.notes, i, []);
+        this.$set(this.keys, i, false);
       }
     },
     drawNotes() {
@@ -85,23 +102,11 @@ export default {
         const availableNotes = this.notes[i];
         for (let k = 0; k < availableNotes.length; k += 1) {
           const note = availableNotes[k];
-          if (this.isKeyNeedTrigger(note) && this.isKeyPressed) {
-            this.noteOn(note.frequency);
-            note.color = this.green;
-          }
-
-          if (note.y + note.h > this.height) {
-            this.noteOff(note.frequency);
-            availableNotes.splice(k, 1);
-          }
-          this.sketch.stroke(255);
-          this.sketch.line(0, this.height - this.keyPressMargin, this.width, this.height - this.keyPressMargin); //eslint-disable-line
-          this.sketch.fill(note.color[0], note.color[1], note.color[2]);
-          this.sketch.rect(this.getPositionX(i), note.y += this.tempo, this.keyWidth, note.h, 10);
+          if (this.isKeyNeedTrigger(note) && this.keys[i]) note.color = this.green;
+          else if (this.isKeyNeedTrigger(note) && !this.keys[i]) note.color = this.red;
+          this.sketch.rect(this.getPositionX(i), note.y, this.keyWidth, note.h);
         }
       }
-      if (this.position >= this.height) this.position = 0;
-      this.position += this.tempo;
     },
 
     drawDivisions() {
@@ -110,26 +115,24 @@ export default {
       }
     },
     playMidi() {
+      const division = this.standardQuarterNote / this.midiJson.header.ppq;
       this.midiJson.tracks.forEach((track) => {
         track.notes.forEach((note) => {
           const { midi, durationTicks, ticks } = note;
-          this.parseNote(midi, durationTicks, ticks);
+          this.parseNote(midi, durationTicks * division, ticks);
         });
       });
+      this.sketch.loop();
     },
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
     },
-    keyDown(e) {
-      if (e.repeat) {
-        this.isKeyBeingPressed = true;
-        this.isKeyPressed = false;
-      } else this.isKeyPressed = true;
-    },
-    keyUp() {
-      this.isKeyPressed = false;
-      this.isKeyBeingPressed = false;
-    },
+    // keyDown(noteNumber) {
+    //   this.$set(this.keys, noteNumber, true);
+    // },
+    // keyUp(noteNumber) {
+    //   this.$set(this.keys, noteNumber, false);
+    // },
     isKeyNeedTrigger(note) {
       return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
     },
@@ -137,28 +140,31 @@ export default {
       return note.y > this.height && note.y + note.h < this.height;
     },
     render() {
+      let position = 0;
       const sketch = (s) => {
+        s.noLoop();
         s.setup = () => { // eslint-disable-line
           s.createCanvas(this.width, this.height);
-          s.stroke(255);
         };
         s.draw = () => { // eslint-disable-line
           s.background(33, 33, 33);
-          s.stroke(255);
-          // this.drawDivisions(s);
-          s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea); //eslint-disable-line
+          this.drawDivisions(s);
+          s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea, 0, 0); //eslint-disable-line
+          s.translate(0, position += this.tempo);
           this.drawNotes(s);
         };
         this.sketch = s;
       };
       new P5(sketch, 'canvas'); //eslint-disable-line
     },
-    noteOn(frequency) {
-      console.log('Note ON: ', frequency);
-      this.piano.keyDown({ note: frequency });
+    noteOn(noteNumber) {
+      console.log('Note ON: ', noteNumber);
+      this.$set(this.keys, noteNumber, true);
+      this.piano.keyDown({ note: Midi(noteNumber).toNote() });
     },
-    noteOff(frequency) {
-      this.piano.keyUp({ note: frequency });
+    noteOff(noteNumber) {
+      this.$set(this.keys, noteNumber, false);
+      this.piano.keyUp({ note: Midi(noteNumber).toNote() });
     },
   },
 };
