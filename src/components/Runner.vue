@@ -30,7 +30,10 @@ export default {
       sketch: null,
       synth: null,
       noteOns: new Set(),
-      standardQuarterNote: 240,
+      standardQuarterNoteHeight: 240,
+      position: 0,
+      currentTick: 0,
+      notesOnStage: [],
     };
   },
   mounted() {
@@ -65,9 +68,29 @@ export default {
     blue() { return [3, 132, 252]; },
     keyTriggerArea() { return this.height - this.keyPressMargin; },
     keyPressMargin() { return this.tempo * 5; },
+    allNotes() {
+      return _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]);
+    },
     minimumMeasure() {
-      const allNotes = _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]);
-      return Math.ceil(_.minBy(allNotes, (note) => note.durationTicks).durationTicks / 20) * 20;
+      return Math.ceil(
+        _.minBy(this.allNotes, (note) => note.durationTicks).durationTicks / 20,
+      )
+        * 20;
+    },
+    scaledMinMeasure() {
+      return this.minimumMeasure * this.divisionRate;
+    },
+    lastTick() {
+      return _.maxBy(this.allNotes, (note) => note.ticks).ticks;
+    },
+    availableKeys() {
+      return new Set(this.allNotes.map((note) => note.midi));
+    },
+    divisionRate() {
+      return this.standardQuarterNoteHeight / this.midiJson.header.ppq;
+    },
+    adjustedPosition() {
+      return this.position % this.height;
     },
   },
   watch: {
@@ -87,91 +110,104 @@ export default {
         this.$set(this.keys, i, false);
       }
     },
-    drawNotes() {
-      for (let i = this.lowestKey; i < this.highestKey; i += 1) {
-        const availableNotes = this.notes[i];
-        for (let k = 0; k < availableNotes.length; k += 1) {
-          const note = availableNotes[k];
-          if (this.isKeyNeedTrigger(note) && this.keys[i]) note.color = this.green;
-          else if (this.isKeyNeedTrigger(note) && !this.keys[i]) note.color = this.red;
-          this.sketch.rect(this.getPositionX(i), note.y, this.keyWidth, note.h);
-        }
+    fillNotes() {
+      for (let tick = 0; tick < this.lastTick; tick += this.minimumMeasure) {
+        this.availableKeys.forEach((key) => {
+          this.notes[key].push(false);
+        });
       }
     },
+    drawNotes() {
+      if (this.position % this.scaledMinMeasure === 0) {
+        console.log('new tick!', this.currentTick += 1);
+        this.availableKeys.forEach((key) => {
+          const note = this.notes[key][this.currentTick];
+          if (note) this.notesOnStage.push(note);
+        });
+      }
+      this.notesOnStage.forEach((note) => {
+        if (this.isKeyNeedTrigger(note)) {
+          note.color = this.green;
+          note.isOpen = true;
+          this.noteOn(note);
+        }
+        this.sketch.fill(note.color);
+        this.sketch.rect(this.getPositionX(note.number), note.y, this.keyWidth, note.h);
+
+        if (this.position + note.y + note.h > this.height && note.isOpen) {
+          note.isOpen = false;
+          this.noteOff(note);
+        }
+      });
+    },
     drawDivisions() {
-      for (let i = 0; i < this.height; i += this.minimumMeasure) {
+      for (let i = 0; i < this.height; i += this.scaledMinMeasure) {
         this.sketch.line(0, i, this.width, i);
       }
     },
     playMidi() {
-      const division = this.standardQuarterNote / this.midiJson.header.ppq;
+      this.fillNotes();
       this.midiJson.tracks.forEach((track) => {
+        console.log('parsing tracks..');
         track.notes.forEach((note) => {
+          console.log('parsing notes..');
           const { midi, durationTicks, ticks } = note;
-          this.parseNote(midi, durationTicks * division, ticks);
+          const adjustedHeight = durationTicks * this.divisionRate;
+          const adjustedStart = -ticks * this.divisionRate;
+          this.notes[midi][ticks / this.minimumMeasure] = {
+            number: midi,
+            name: Midi(midi).toNote(),
+            color: [255, 255, 255],
+            velocity: 0,
+            y: adjustedStart,
+            h: -adjustedHeight,
+            isOpen: false,
+          };
         });
       });
       this.sketch.loop();
-    },
-    parseNote(noteNumber, durationTick, currentTick) {
-      const adjustedHeight = Math.round(durationTick / this.noteScaleFactor);
-      const adjustedStart = Math.round(-currentTick / this.noteScaleFactor);
-      this.$set(this.notes, noteNumber, [
-        ...this.notes[noteNumber],
-        {
-          noteName: Midi(noteNumber).toNote(),
-          color: [255, 255, 255],
-          velocity: 0,
-          y: adjustedStart,
-          h: -adjustedHeight,
-          isOpen: false,
-        },
-      ]);
     },
     getPositionX(noteNumber) {
       return (noteNumber - this.lowestKey) * this.keyWidth;
     },
     keyDown() {
       this.sketch.noLoop();
-      // this.$set(this.keys, noteNumber, true);
     },
     keyUp() {
       this.sketch.loop();
-      // this.$set(this.keys, noteNumber, false);
     },
     isKeyNeedTrigger(note) {
-      return (this.height - this.keyPressMargin) < note.y && note.y < this.height; //eslint-disable-line
+      const positionY = note.y + this.position;
+      return (this.height - this.keyPressMargin) < positionY && positionY < this.height;
     },
     isKeyNeedPressed(note) {
       return note.y > this.height && note.y + note.h < this.height;
     },
     render() {
-      let position = 0;
       const sketch = (s) => {
         s.noLoop();
-        s.setup = () => { // eslint-disable-line
+        s.setup = () => {
           s.createCanvas(this.width, this.height);
         };
-        s.draw = () => { // eslint-disable-line
+        s.draw = () => {
           s.background(33, 33, 33);
           this.drawDivisions(s);
-          // s.line(0, this.keyTriggerArea, this.width, this.keyTriggerArea, 0, 0);
-          //eslint-disable-line
-          s.translate(0, position += this.tempo);
+          s.translate(0, this.position += this.tempo);
           this.drawNotes(s);
         };
         this.sketch = s;
       };
-      new P5(sketch, 'canvas'); //eslint-disable-line
+      new P5(sketch, 'canvas');
     },
-    noteOn(noteNumber) {
-      console.log('Note ON: ', noteNumber);
-      this.$set(this.keys, noteNumber, true);
-      this.piano.keyDown({ note: Midi(noteNumber).toNote() });
+    noteOn(note) {
+      console.log('Note ON: ', note.name);
+      this.$set(this.keys, note.number, true);
+      this.piano.keyDown({ note: note.name });
     },
-    noteOff(noteNumber) {
-      this.$set(this.keys, noteNumber, false);
-      this.piano.keyUp({ note: Midi(noteNumber).toNote() });
+    noteOff(note) {
+      console.log('Note OFF: ', note.name);
+      this.$set(this.keys, note.number, false);
+      this.piano.keyUp({ note: note.name });
     },
   },
 };
