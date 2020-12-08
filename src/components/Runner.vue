@@ -130,9 +130,15 @@ export default {
           note.color = this.green;
           note.isOpen = true;
           this.noteOn(note);
+          this.sketch.fill(this.red);
+          this.sketch.rect(note.x, this.height - this.position, this.keyWidth, -10);
         }
         this.sketch.fill(note.color);
-        this.sketch.rect(this.getPositionX(note.number), note.y, this.keyWidth, note.h);
+        this.sketch.rect(note.x, note.y, this.keyWidth, note.h, 5);
+        if (note.isOpen) {
+          this.sketch.fill(this.red);
+          this.sketch.rect(note.x, this.height - this.position, this.keyWidth, -10);
+        }
 
         if (this.position + note.y + note.h > this.height && note.isOpen) {
           note.isOpen = false;
@@ -159,6 +165,7 @@ export default {
             name: Midi(midi).toNote(),
             color: [255, 255, 255],
             velocity: 0,
+            x: (midi - this.lowestKey) * this.keyWidth,
             y: adjustedStart,
             h: -adjustedHeight,
             isOpen: false,
@@ -166,9 +173,6 @@ export default {
         });
       });
       this.sketch.loop();
-    },
-    getPositionX(noteNumber) {
-      return (noteNumber - this.lowestKey) * this.keyWidth;
     },
     keyDown() {
       this.sketch.noLoop();

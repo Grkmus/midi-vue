@@ -1,28 +1,29 @@
 <template>
-  <div class="key" v-bind:class="{ pressed: velocity}" >
+  <div class="black-key" v-bind:class="{ pressed: velocity}">
   </div>
 </template>
 
 <script>
 export default {
-  name: 'Key',
+  name: 'BlackKey',
   props: {
     velocity: Number,
     note: String,
-    color: String,
   },
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.key {
+.black-key {
   width: 50px;
-  height: auto;
+  height: calc(100% / 1.5);
   border: 1px solid;
-  background-color: whitesmoke;
+  background-color: rgb(27, 27, 32);
   margin: 0;
   padding: 0;
+  z-index: 10;
+  position: relative;
 }
 
 .pressed {

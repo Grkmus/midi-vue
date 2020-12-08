@@ -13,7 +13,7 @@
       :keyWidth="keyWidth"></runner>
     </div>
     <div id="keyboard">
-      <key :key="`key${k}`" :velocity="v" v-for="(v, k) in keys"></key>
+      <octave :key="k" v-for="k in octaveAmount"></octave>
     </div>
   </div>
 </template>
@@ -22,13 +22,13 @@
 import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
 import _ from 'lodash';
-import Key from './components/Key.vue';
+import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
 
 export default {
   name: 'App',
   components: {
-    Key,
+    Octave,
     Runner,
   },
   data() {
@@ -48,6 +48,7 @@ export default {
       midiJson: null,
       source: null,
       tempo: null,
+      octaveAmount: 5,
     };
   },
   created() {
@@ -70,7 +71,7 @@ export default {
   mounted() {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
-    this.keyWidth = this.$el.querySelector('.key').getBoundingClientRect().width;
+    this.keyWidth = this.$el.querySelector('.white-key').getBoundingClientRect().width;
 
     this.source = this.$refs.filereader;
     this.reader.addEventListener('onerror', (e) => {
