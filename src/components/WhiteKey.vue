@@ -1,5 +1,5 @@
 <template>
-  <div class="white-key" v-bind:class="{ pressed: velocity}">
+  <div v-bind:class="{ pressed: currentVelocity}" class="white-key" >
   </div>
 </template>
 
@@ -10,11 +10,25 @@ export default {
     velocity: Number,
     note: String,
   },
+  data() {
+    return {
+      currentVelocity: 0,
+    };
+  },
+  methods: {
+    pressKey(velocity) {
+      console.log('we are setting velocity to:', velocity);
+      this.currentVelocity = velocity;
+    },
+    releaseKey() {
+      this.currentVelocity = 0;
+    },
+  },
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style>
+<style scoped>
 
 .pressed {
   background-color: orangered;

@@ -13,15 +13,13 @@
       :keyWidth="keyWidth"></runner>
     </div>
     <div id="keyboard">
-      <octave :key="k" v-for="k in octaveAmount"></octave>
+      <octave :ref="k" :octaveWidth="octaveWidth" :keyWidth="keyWidth" :key="k" v-for="k in octaveAmount"></octave>
     </div>
   </div>
 </template>
 
 <script>
-import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
-import _ from 'lodash';
 import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
 
@@ -33,47 +31,19 @@ export default {
   },
   data() {
     return {
-      inputs: Array,
-      outputs: Array,
-      keys: {},
       reader: new FileReader(),
-      midiAccess: null,
-      midiDevice: null,
-      start: 36,
-      end: 96,
       sheetHeight: null,
       sheetWidth: null,
-      keyWidth: null,
-      currentTick: 0,
       midiJson: null,
-      source: null,
-      tempo: null,
-      octaveAmount: 5,
+      file: null,
+      octaveAmount: 7,
     };
-  },
-  created() {
-    for (let i = this.start; i < this.end; i += 1) {
-      this.$set(this.keys, i, 0);
-    }
-    WebMidi.enable(() => {
-      console.log(WebMidi.inputs);
-      console.log(WebMidi.outputs);
-      this.midiDevice = WebMidi.getInputByName('GO:KEYS');
-      this.midiDevice.addListener('noteon', 'all', (e) => {
-        this.playNote(e.note.number, e.rawVelocity);
-        if (this.isConfiguring) this.$emit('noteon', e.note.number);
-      });
-      this.midiDevice.addListener('noteoff', 'all', (e) => {
-        this.playNote(e.note.number, 0);
-      });
-    });
   },
   mounted() {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
-    this.keyWidth = this.$el.querySelector('.white-key').getBoundingClientRect().width;
 
-    this.source = this.$refs.filereader;
+    this.file = this.$refs.filereader;
     this.reader.addEventListener('onerror', (e) => {
       console.log('load different.', e);
     });
@@ -84,14 +54,10 @@ export default {
     });
   },
   computed: {
-    totalTime() {
-      return _.sumBy(this.midiJson.track[1].event, 'deltaTime');
-    },
+    octaveWidth() { return this.sheetWidth / this.octaveAmount; },
+    keyWidth() { return this.octaveWidth / 12; },
   },
   methods: {
-    playNote(noteNumber, velocity) {
-      this.$set(this.keys, noteNumber, velocity);
-    },
     readFile() {
       // triggers the load event!
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);

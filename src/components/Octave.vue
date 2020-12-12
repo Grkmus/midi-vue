@@ -1,20 +1,20 @@
 <template>
   <div :style="{width: `${octaveWidth}px`}" class="octave">
     <div class="white-keys">
-      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" key="C" note="C"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" key="D" note="D"></white-key>
-      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" key="E" note="E"></white-key>
-      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" key="F" note="F"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" key="G" note="G"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" key="A" note="A"></white-key>
-      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" key="B" note="B"></white-key>
+      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" ref="C"  key="C" note="C"></white-key>
+      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="D"  key="D" note="D"></white-key>
+      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" ref="E"  key="E" note="E"></white-key>
+      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" ref="F"  key="F" note="F"></white-key>
+      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="G"  key="G" note="G"></white-key>
+      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="A"  key="A" note="A"></white-key>
+      <white-key :style="{ width: `${irregularWhiteKeyWidth}px`}" ref="B"  key="B" note="B"></white-key>
     </div>
     <div class="black-keys">
-      <black-key :style="{ width: `${blackKeyWidth}px`, left:`${blackKeyWidth}px`}" key="C#" note="C#"></black-key>
-      <black-key :style="{ width: `${blackKeyWidth}px`, left:`${blackKeyWidth * 3}px`}" key="D#" note="D#"></black-key>
-      <black-key :style="{ width: `${blackKeyWidth}px`, left:`${blackKeyWidth* 6}px`}" key="F#" note="F#"></black-key>
-      <black-key :style="{ width: `${blackKeyWidth}px`, left:`${blackKeyWidth * 8}px`}" key="G#" note="G#"></black-key>
-      <black-key :style="{ width: `${blackKeyWidth}px`, left:`${blackKeyWidth * 10}px`}" key="A#" note="A#"></black-key>
+      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth}px`}"      ref="C#" key="C#" note="C#"></black-key>
+      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth * 3}px`}"  ref="D#" key="D#" note="D#"></black-key>
+      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth* 6}px`}"   ref="F#" key="F#" note="F#"></black-key>
+      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth * 8}px`}"  ref="G#" key="G#" note="G#"></black-key>
+      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth * 10}px`}" ref="A#" key="A#" note="A#"></black-key>
     </div>
   </div>
 </template>
@@ -26,15 +26,12 @@ import BlackKey from './BlackKey.vue';
 export default {
   components: { WhiteKey, BlackKey },
   name: 'Octave',
-  data() {
-    return {
-      calculatedKeyWidth: null,
-    };
+  props: {
+    keyWidth: Number,
+    octaveWidth: Number,
   },
   computed: {
-    octaveWidth() { return this.$parent.sheetWidth / this.$parent.octaveAmount; },
-    blackKeyWidth() { return this.octaveWidth / 12; },
-    whiteKeyWidth() { return this.blackKeyWidth * 2; },
+    whiteKeyWidth() { return this.keyWidth * 2; },
     irregularWhiteKeyWidth() { return this.whiteKeyWidth * 0.75; },
   },
 };

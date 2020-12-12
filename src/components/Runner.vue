@@ -23,13 +23,9 @@ export default {
       notes: {},
       keys: {},
       lowestKey: 36,
-      highestKey: 96,
-      noteScaleFactor: 1,
       isKeyPressed: false,
       isKeyBeingPressed: false,
       sketch: null,
-      synth: null,
-      noteOns: new Set(),
       standardQuarterNoteHeight: 240,
       position: 0,
       currentTick: 0,
@@ -41,13 +37,7 @@ export default {
     this.render();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
-    this.piano = new Piano({
-      velocities: 2,
-    });
-    this.piano.toDestination();
-    this.piano.load().then(() => {
-      console.log('loaded!');
-    });
+    this.initializePianoSamples();
     WebMidi.enable(() => {
       console.log(WebMidi.inputs);
       console.log(WebMidi.outputs);
@@ -68,30 +58,17 @@ export default {
     blue() { return [3, 132, 252]; },
     keyTriggerArea() { return this.height - this.keyPressMargin; },
     keyPressMargin() { return this.tempo * 5; },
-    allNotes() {
-      return _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]);
-    },
-    minimumMeasure() {
-      return Math.ceil(
-        _.minBy(this.allNotes, (note) => note.durationTicks).durationTicks / 20,
-      )
-        * 20;
-    },
-    scaledMinMeasure() {
-      return this.minimumMeasure * this.divisionRate;
-    },
-    lastTick() {
-      return _.maxBy(this.allNotes, (note) => note.ticks).ticks;
-    },
-    availableKeys() {
-      return new Set(this.allNotes.map((note) => note.midi));
-    },
-    divisionRate() {
-      return this.standardQuarterNoteHeight / this.midiJson.header.ppq;
-    },
-    adjustedPosition() {
-      return this.position % this.height;
-    },
+    allNotes() { return _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]); },
+
+    // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
+    minimumMeasure() { return Math.ceil(_.minBy(this.allNotes, (note) => note.durationTicks).durationTicks / 20) * 20; },
+    scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
+
+    startTick() { return _.minBy(this.allNotes, (note) => note.ticks).ticks; },
+    lastTick() { return _.maxBy(this.allNotes, (note) => note.ticks).ticks; },
+    availableKeys() { return new Set(this.allNotes.map((note) => note.midi)); },
+    divisionRate() { return this.standardQuarterNoteHeight / this.midiJson.header.ppq; },
+    adjustedPosition() { return this.position % this.height; },
   },
   watch: {
     isKeyPressed(newVal) {
@@ -104,8 +81,17 @@ export default {
     },
   },
   methods: {
+    initializePianoSamples() {
+      this.piano = new Piano({
+        velocities: 2,
+      });
+      this.piano.toDestination();
+      this.piano.load().then(() => {
+        console.log('loaded!');
+      });
+    },
     createNotes() {
-      for (let i = this.lowestKey; i < this.highestKey; i += 1) {
+      for (let i = this.lowestKey; i < 127; i += 1) {
         this.$set(this.notes, i, []);
         this.$set(this.keys, i, false);
       }
@@ -157,10 +143,14 @@ export default {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
           console.log('parsing notes..');
-          const { midi, durationTicks, ticks } = note;
+          const {
+            midi, durationTicks, ticks, octave, pitch,
+          } = note;
           const adjustedHeight = durationTicks * this.divisionRate;
           const adjustedStart = -ticks * this.divisionRate;
-          this.notes[midi][ticks / this.minimumMeasure] = {
+          console.log('the tick: ', ticks);
+          console.log('to slot: ', Math.floor(ticks / this.minimumMeasure));
+          this.notes[midi][Math.floor(ticks / this.minimumMeasure)] = {
             number: midi,
             name: Midi(midi).toNote(),
             color: [255, 255, 255],
@@ -169,16 +159,29 @@ export default {
             y: adjustedStart,
             h: -adjustedHeight,
             isOpen: false,
+            octave,
+            pitch,
           };
         });
       });
       this.sketch.loop();
     },
-    keyDown() {
-      this.sketch.noLoop();
+    pressKeyComponent(note) {
+      const { octave, pitch } = note;
+      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
+    },
+    releaseKeyComponent(note) {
+      const { octave, pitch } = note;
+      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
+    },
+    keyDown(e) {
+      console.log(e.code);
+      if (e.code === 'KeyS') this.sketch.loop();
+      this.$emit('key-down');
     },
     keyUp() {
-      this.sketch.loop();
+      // this.sketch.loop();
+      this.$emit('key-up');
     },
     isKeyNeedTrigger(note) {
       const positionY = note.y + this.position;
@@ -204,14 +207,16 @@ export default {
       new P5(sketch, 'canvas');
     },
     noteOn(note) {
-      console.log('Note ON: ', note.name);
+      console.log('Note ON: ', note);
       this.$set(this.keys, note.number, true);
       this.piano.keyDown({ note: note.name });
+      this.pressKeyComponent(note);
     },
     noteOff(note) {
       console.log('Note OFF: ', note.name);
       this.$set(this.keys, note.number, false);
       this.piano.keyUp({ note: note.name });
+      this.releaseKeyComponent(note);
     },
   },
 };
