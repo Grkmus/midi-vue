@@ -14,17 +14,7 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.black-key {
-  width: 50px;
-  height: calc(100% / 1.5);
-  border: 1px solid;
-  background-color: rgb(27, 27, 32);
-  margin: 0;
-  padding: 0;
-  z-index: 10;
-  position: relative;
-}
+<style>
 
 .pressed {
   background-color: orangered;

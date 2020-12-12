@@ -14,15 +14,7 @@ export default {
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.white-key {
-  width: 50px;
-  height: auto;
-  border: 1px solid;
-  background-color: whitesmoke;
-  margin: 0;
-  padding: 0;
-}
+<style>
 
 .pressed {
   background-color: orangered;
