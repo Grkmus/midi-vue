@@ -29,6 +29,7 @@ export default {
       position: 0,
       currentTick: 0,
       notesOnStage: [],
+      keysToBePressed: [],
     };
   },
   mounted() {
@@ -45,6 +46,9 @@ export default {
         console.log(e);
         const { note } = e;
         this.$set(this.keys, note.number, true);
+        const noteIndex = this.keysToBePressed.indexOf(note.number);
+        if (noteIndex !== -1) { this.keysToBePressed.splice(noteIndex, 1); }
+        if (!this.keysToBePressed.length) this.sketch.loop();
         this.noteOn(note);
       });
       this.midiDevice.addListener('noteoff', 'all', (e) => {
@@ -125,7 +129,9 @@ export default {
       this.notesOnStage.forEach((note) => {
         note.show();
         if (note.isNoteStart()) {
-          this.noteOn(note);
+          this.sketch.noLoop();
+          this.keysToBePressed.push(note.number);
+          this.pressKeyComponent(note.octave, note.name);
         }
         if (note.isNoteEnd() && note.isOpen) {
           this.noteOff(note);
