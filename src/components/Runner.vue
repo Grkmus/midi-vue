@@ -5,7 +5,6 @@
 <script>
 import WebMidi from 'webmidi';
 import P5 from 'p5';
-import { Midi } from 'tone';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
 
@@ -44,11 +43,15 @@ export default {
       this.midiDevice = WebMidi.getInputByName('GO:KEYS');
       this.midiDevice.addListener('noteon', 'all', (e) => {
         console.log(e);
-        this.noteOn(e.note.number);
+        const { note } = e;
+        this.$set(this.keys, note.number, true);
+        this.noteOn(note);
       });
       this.midiDevice.addListener('noteoff', 'all', (e) => {
         console.log(e);
-        this.noteOff(e.note.number);
+        const { note } = e;
+        this.$set(this.keys, note.number, false);
+        this.noteOff(note);
       });
     });
   },
@@ -81,6 +84,7 @@ export default {
     },
   },
   methods: {
+
     initializePianoSamples() {
       this.piano = new Piano({
         velocities: 2,
@@ -90,12 +94,14 @@ export default {
         console.log('loaded!');
       });
     },
+
     createNotes() {
       for (let i = this.lowestKey; i < 127; i += 1) {
         this.$set(this.notes, i, []);
         this.$set(this.keys, i, false);
       }
     },
+
     fillNotes() {
       for (let tick = 0; tick < this.lastTick; tick += this.minimumMeasure) {
         this.availableKeys.forEach((key) => {
@@ -103,21 +109,41 @@ export default {
         });
       }
     },
-    drawNotes() {
+
+    pushNoteOnStage() {
+      // when it time to a new tick, put the notes on stage:
       if (this.position % this.scaledMinMeasure === 0) {
-        console.log('new tick!', this.currentTick += 1);
+        this.sketch.noLoop();
+        this.currentTick += 1;
+        console.log('new tick!', this.currentTick);
         this.availableKeys.forEach((key) => {
           const note = this.notes[key][this.currentTick];
           if (note) this.notesOnStage.push(note);
         });
       }
+    },
+
+    drawNotes() {
+      this.pushNoteOnStage();
+
       this.notesOnStage.forEach((note) => {
-        if (this.isKeyNeedTrigger(note)) {
-          note.color = this.green;
+        // three phases for each note after they appear in the stage
+        // 1. note start
+        // - the point where the y value of note is equals with screen height
+        // 2. note being played
+        // 3. note stop
+        if (this.isNoteStart(note)) {
+          this.sketch.noLoop();
           note.isOpen = true;
           this.noteOn(note);
           this.sketch.fill(this.red);
           this.sketch.rect(note.x, this.height - this.position, this.keyWidth, -10);
+          console.log('checking the key..', note);
+          // if (this.keys[note.number]) {
+          if (this.isKeyPressed) {
+            note.color = this.green;
+            this.sketch.loop();
+          }
         }
         this.sketch.fill(note.color);
         this.sketch.rect(note.x, note.y, this.keyWidth, note.h, 5);
@@ -152,38 +178,37 @@ export default {
           console.log('to slot: ', Math.floor(ticks / this.minimumMeasure));
           this.notes[midi][Math.floor(ticks / this.minimumMeasure)] = {
             number: midi,
-            name: Midi(midi).toNote(),
+            octave,
+            name: pitch,
             color: [255, 255, 255],
             velocity: 0,
             x: (midi - this.lowestKey) * this.keyWidth,
             y: adjustedStart,
             h: -adjustedHeight,
             isOpen: false,
-            octave,
-            pitch,
           };
         });
       });
       this.sketch.loop();
     },
-    pressKeyComponent(note) {
-      const { octave, pitch } = note;
+    pressKeyComponent(octave, pitch) {
       this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
     },
-    releaseKeyComponent(note) {
-      const { octave, pitch } = note;
+    releaseKeyComponent(octave, pitch) {
       this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
     },
     keyDown(e) {
       console.log(e.code);
-      if (e.code === 'KeyS') this.sketch.loop();
+      this.isKeyPressed = true;
+      // this.sketch.loop();
       this.$emit('key-down');
     },
     keyUp() {
-      // this.sketch.loop();
+      // this.sketch.noLoop();
+      this.isKeyPressed = false;
       this.$emit('key-up');
     },
-    isKeyNeedTrigger(note) {
+    isNoteStart(note) {
       const positionY = note.y + this.position;
       return (this.height - this.keyPressMargin) < positionY && positionY < this.height;
     },
@@ -208,15 +233,13 @@ export default {
     },
     noteOn(note) {
       console.log('Note ON: ', note);
-      this.$set(this.keys, note.number, true);
-      this.piano.keyDown({ note: note.name });
-      this.pressKeyComponent(note);
+      this.piano.keyDown({ midi: note.number });
+      this.pressKeyComponent(note.octave, note.name);
     },
     noteOff(note) {
-      console.log('Note OFF: ', note.name);
-      this.$set(this.keys, note.number, false);
-      this.piano.keyUp({ note: note.name });
-      this.releaseKeyComponent(note);
+      console.log('Note OFF: ', note);
+      this.piano.keyUp({ midi: note.number });
+      this.releaseKeyComponent(note.octave, note.name);
     },
   },
 };
