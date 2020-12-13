@@ -86,9 +86,7 @@ export default {
   methods: {
 
     initializePianoSamples() {
-      this.piano = new Piano({
-        velocities: 2,
-      });
+      this.piano = new Piano({ velocities: 2 });
       this.piano.toDestination();
       this.piano.load().then(() => {
         console.log('loaded!');
@@ -102,7 +100,7 @@ export default {
       }
     },
 
-    fillNotes() {
+    fillSlots() {
       for (let tick = 0; tick < this.lastTick; tick += this.minimumMeasure) {
         this.availableKeys.forEach((key) => {
           this.notes[key].push(false);
@@ -124,18 +122,37 @@ export default {
 
     drawNotes() {
       this.pushNoteOnStage();
-
       this.notesOnStage.forEach((note) => {
         note.show();
         if (note.isNoteStart()) {
-          console.log('checking the key..', note);
           this.noteOn(note);
         }
-
         if (note.isNoteEnd() && note.isOpen) {
           this.noteOff(note);
         }
       });
+    },
+
+    noteOn(note) {
+      note.isOpen = true;
+      console.log('Note ON: ', note);
+      this.piano.keyDown({ midi: note.number });
+      this.pressKeyComponent(note.octave, note.name);
+    },
+
+    noteOff(note) {
+      note.isOpen = false;
+      console.log('Note OFF: ', note);
+      this.piano.keyUp({ midi: note.number });
+      this.releaseKeyComponent(note.octave, note.name);
+    },
+
+    pressKeyComponent(octave, pitch) {
+      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
+    },
+
+    releaseKeyComponent(octave, pitch) {
+      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
     },
 
     drawDivisions() {
@@ -143,8 +160,9 @@ export default {
         this.sketch.line(0, i, this.width, i);
       }
     },
+
     playMidi() {
-      this.fillNotes();
+      this.fillSlots();
       this.midiJson.tracks.forEach((track) => {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
@@ -172,30 +190,24 @@ export default {
       });
       this.sketch.loop();
     },
-    pressKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
-    },
-    releaseKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
-    },
+
     keyDown(e) {
       console.log(e.code);
       this.isKeyPressed = true;
       // this.sketch.loop();
       this.$emit('key-down');
     },
+
     keyUp() {
       // this.sketch.noLoop();
       this.isKeyPressed = false;
       this.$emit('key-up');
     },
-    isNoteStart(note) {
-      const positionY = note.y + this.position;
-      return (this.height - this.keyPressMargin) < positionY && positionY < this.height;
-    },
+
     isKeyNeedPressed(note) {
       return note.y > this.height && note.y + note.h < this.height;
     },
+
     render() {
       const sketch = (s) => {
         s.noLoop();
@@ -211,18 +223,6 @@ export default {
         this.sketch = s;
       };
       new P5(sketch, 'canvas');
-    },
-    noteOn(note) {
-      note.isOpen = true;
-      console.log('Note ON: ', note);
-      this.piano.keyDown({ midi: note.number });
-      this.pressKeyComponent(note.octave, note.name);
-    },
-    noteOff(note) {
-      note.isOpen = false;
-      console.log('Note OFF: ', note);
-      this.piano.keyUp({ midi: note.number });
-      this.releaseKeyComponent(note.octave, note.name);
     },
   },
 };
