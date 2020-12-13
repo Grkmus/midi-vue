@@ -36,7 +36,7 @@ export default {
       sheetWidth: null,
       midiJson: null,
       file: null,
-      octaveAmount: 7,
+      octaveAmount: 5,
     };
   },
   mounted() {

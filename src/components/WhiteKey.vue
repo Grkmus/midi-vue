@@ -17,7 +17,6 @@ export default {
   },
   methods: {
     pressKey(velocity) {
-      console.log('we are setting velocity to:', velocity);
       this.currentVelocity = velocity;
     },
     releaseKey() {

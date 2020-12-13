@@ -60,7 +60,7 @@ export default {
     red() { return [213, 7, 76]; },
     blue() { return [3, 132, 252]; },
     keyTriggerArea() { return this.height - this.keyPressMargin; },
-    keyPressMargin() { return this.tempo * 5; },
+    keyPressMargin() { return this.tempo; },
     allNotes() { return _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]); },
 
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
@@ -113,7 +113,6 @@ export default {
     pushNoteOnStage() {
       // when it time to a new tick, put the notes on stage:
       if (this.position % this.scaledMinMeasure === 0) {
-        this.sketch.noLoop();
         this.currentTick += 1;
         console.log('new tick!', this.currentTick);
         this.availableKeys.forEach((key) => {
@@ -127,37 +126,18 @@ export default {
       this.pushNoteOnStage();
 
       this.notesOnStage.forEach((note) => {
-        // three phases for each note after they appear in the stage
-        // 1. note start
-        // - the point where the y value of note is equals with screen height
-        // 2. note being played
-        // 3. note stop
-        if (this.isNoteStart(note)) {
-          this.sketch.noLoop();
-          note.isOpen = true;
-          this.noteOn(note);
-          this.sketch.fill(this.red);
-          this.sketch.rect(note.x, this.height - this.position, this.keyWidth, -10);
+        note.show();
+        if (note.isNoteStart()) {
           console.log('checking the key..', note);
-          // if (this.keys[note.number]) {
-          if (this.isKeyPressed) {
-            note.color = this.green;
-            this.sketch.loop();
-          }
-        }
-        this.sketch.fill(note.color);
-        this.sketch.rect(note.x, note.y, this.keyWidth, note.h, 5);
-        if (note.isOpen) {
-          this.sketch.fill(this.red);
-          this.sketch.rect(note.x, this.height - this.position, this.keyWidth, -10);
+          this.noteOn(note);
         }
 
-        if (this.position + note.y + note.h > this.height && note.isOpen) {
-          note.isOpen = false;
+        if (note.isNoteEnd() && note.isOpen) {
           this.noteOff(note);
         }
       });
     },
+
     drawDivisions() {
       for (let i = 0; i < this.height; i += this.scaledMinMeasure) {
         this.sketch.line(0, i, this.width, i);
@@ -176,16 +156,22 @@ export default {
           const adjustedStart = -ticks * this.divisionRate;
           console.log('the tick: ', ticks);
           console.log('to slot: ', Math.floor(ticks / this.minimumMeasure));
+          const x = (midi - this.lowestKey) * this.keyWidth;
+          const y = adjustedStart;
+          const w = this.keyWidth;
+          const h = -adjustedHeight;
           this.notes[midi][Math.floor(ticks / this.minimumMeasure)] = {
             number: midi,
             octave,
             name: pitch,
             color: [255, 255, 255],
             velocity: 0,
-            x: (midi - this.lowestKey) * this.keyWidth,
-            y: adjustedStart,
-            h: -adjustedHeight,
             isOpen: false,
+            show: () => {
+              this.sketch.rect(x, y, w, h, 5);
+            },
+            isNoteStart: () => (this.height - this.keyPressMargin) < y + this.position && y + this.position < this.height,
+            isNoteEnd: () => (this.position + y + h > this.height),
           };
         });
       });
@@ -232,11 +218,13 @@ export default {
       new P5(sketch, 'canvas');
     },
     noteOn(note) {
+      note.isOpen = true;
       console.log('Note ON: ', note);
       this.piano.keyDown({ midi: note.number });
       this.pressKeyComponent(note.octave, note.name);
     },
     noteOff(note) {
+      note.isOpen = false;
       console.log('Note OFF: ', note);
       this.piano.keyUp({ midi: note.number });
       this.releaseKeyComponent(note.octave, note.name);
