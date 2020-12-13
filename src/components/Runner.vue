@@ -152,24 +152,19 @@ export default {
           const {
             midi, durationTicks, ticks, octave, pitch,
           } = note;
-          const adjustedHeight = durationTicks * this.divisionRate;
+          const adjustedHeight = -durationTicks * this.divisionRate;
           const adjustedStart = -ticks * this.divisionRate;
-          console.log('the tick: ', ticks);
-          console.log('to slot: ', Math.floor(ticks / this.minimumMeasure));
-          const x = (midi - this.lowestKey) * this.keyWidth;
-          const y = adjustedStart;
-          const w = this.keyWidth;
-          const h = -adjustedHeight;
-          this.notes[midi][Math.floor(ticks / this.minimumMeasure)] = {
+          const slot = Math.floor(ticks / this.minimumMeasure);
+          // note's dimensions to sketch
+          const [x, y, w, h] = [(midi - this.lowestKey) * this.keyWidth, adjustedStart, this.keyWidth, adjustedHeight];
+          this.notes[midi][slot] = {
             number: midi,
             octave,
             name: pitch,
             color: [255, 255, 255],
             velocity: 0,
             isOpen: false,
-            show: () => {
-              this.sketch.rect(x, y, w, h, 5);
-            },
+            show: () => (this.sketch.rect(x, y, w, h, 5)),
             isNoteStart: () => (this.height - this.keyPressMargin) < y + this.position && y + this.position < this.height,
             isNoteEnd: () => (this.position + y + h > this.height),
           };
