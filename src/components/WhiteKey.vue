@@ -1,5 +1,6 @@
 <template>
   <div v-bind:class="{ pressed: currentVelocity}" class="white-key" >
+    <span>{{ note }}</span>
   </div>
 </template>
 
@@ -31,5 +32,16 @@ export default {
 
 .pressed {
   background-color: orangered;
+}
+
+span {
+  position: relative;
+  top: 80%;
+  border-radius: 5px;
+  padding: 5px;
+  background: rgb(209, 208, 208);
+  font: outline;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bolder;
 }
 </style>
