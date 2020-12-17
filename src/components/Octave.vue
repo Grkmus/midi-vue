@@ -67,6 +67,7 @@ export default {
 .white-key {
   height: 100%;
   border: 1px solid;
+  border-radius: 5px;
   background-color: whitesmoke;
   margin: 0;
   padding: 0;
@@ -75,6 +76,7 @@ export default {
 .black-key {
   height: calc(100% / 1.5);
   border: 1px solid;
+  border-radius: 5px;
   background-color: rgb(27, 27, 32);
   margin: 0;
   padding: 0;
