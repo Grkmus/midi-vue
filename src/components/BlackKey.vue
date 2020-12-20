@@ -37,7 +37,6 @@ span {
   padding-right: 5px;
   padding-left: 5px;
   border-radius: 5px;
-  border-radius: 5px;
   background: rgb(209, 208, 208);
   font: outline;
   font-family: Arial, Helvetica, sans-serif;
