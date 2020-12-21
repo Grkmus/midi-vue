@@ -42,18 +42,20 @@ export default {
       console.log(WebMidi.inputs);
       console.log(WebMidi.outputs);
       this.midiDevice = WebMidi.getInputByName('GO:KEYS');
-      this.midiDevice.addListener('noteon', 'all', (e) => {
-        console.log(e);
-        const { note } = e;
-        this.$set(this.keys, note.number, true);
-        this.noteOn(note);
-      });
-      this.midiDevice.addListener('noteoff', 'all', (e) => {
-        console.log(e);
-        const { note } = e;
-        this.$set(this.keys, note.number, false);
-        this.noteOff(note);
-      });
+      if (this.midiDevice) {
+        this.midiDevice.addListener('noteon', 'all', (e) => {
+          console.log(e);
+          const { note } = e;
+          this.$set(this.keys, note.number, true);
+          this.noteOn(note);
+        });
+        this.midiDevice.addListener('noteoff', 'all', (e) => {
+          console.log(e);
+          const { note } = e;
+          this.$set(this.keys, note.number, false);
+          this.noteOff(note);
+        });
+      }
     });
   },
   computed: {
@@ -62,16 +64,16 @@ export default {
     blue() { return [3, 132, 252]; },
     keyTriggerArea() { return this.height - this.keyPressMargin; },
     keyPressMargin() { return this.tempo; },
-    allNotes() { return _.flatMapDeep(this.midiJson.tracks, (track) => [track.notes]); },
+    allNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
 
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
-    minimumMeasure() { return Math.ceil(_.minBy(this.allNotes, (note) => note.durationTicks).durationTicks / 20) * 20; },
+    minimumMeasure() { return Math.ceil(_.minBy(this.allNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
     scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
 
     startTick() { return _.minBy(this.allNotes, (note) => note.ticks).ticks; },
     lastTick() { return _.maxBy(this.allNotes, (note) => note.ticks).ticks; },
     availableKeys() { return new Set(this.allNotes.map((note) => note.midi)); },
-    divisionRate() { return this.standardQuarterNoteHeight / this.midiJson.header.ppq; },
+    divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
     adjustedPosition() { return this.position % this.height; },
   },
   watch: {
@@ -144,11 +146,11 @@ export default {
     },
 
     drawDivisions() {
-      for (let i = 0; i < this.height; i += this.scaledMinMeasure) {
-        this.sketch.line(0, i, this.width, i);
+      for (let i = 0; i < this.width; i += this.keyWidth) {
+        this.sketch.line(i, 0, i, this.height);
       }
     },
-    playMidi() {
+    parseMidi() {
       this.fillNotes();
       this.midiJson.tracks.forEach((track) => {
         console.log('parsing tracks..');
@@ -175,7 +177,6 @@ export default {
           };
         });
       });
-      this.sketch.loop();
     },
     pressKeyComponent(octave, pitch) {
       this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
