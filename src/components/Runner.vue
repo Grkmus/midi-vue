@@ -15,6 +15,7 @@ export default {
     height: null,
     keyWidth: null,
     midiJson: null,
+    isPlaying: Boolean,
   },
   data() {
     return {
@@ -74,6 +75,10 @@ export default {
     adjustedPosition() { return this.position % this.height; },
   },
   watch: {
+    isPlaying(newVal) {
+      if (newVal === false) this.sketch.noLoop();
+      else this.sketch.loop();
+    },
     isKeyPressed(newVal) {
       console.log('isKeypressed');
       console.log(newVal);
