@@ -1,16 +1,27 @@
 <template>
   <div id="app">
     <div id="player">
-      <input @change="readFile" type="file" ref="filereader" name="midi" id="filereader">
-      <!-- <button @click="readMidi">Read</button> -->
-      <button @click="playMidi">Play</button>
+      <div id="midi">
+        <label for="filereader"> Chose a midi file
+          <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
+        </label>
+        <div class="midi-player">
+          <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
+          <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
+          <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
+          <font-awesome-icon icon="stop" size="2x" :style="{ color: 'white' }"/>
+        </div>
+      </div>
     </div>
     <div id="sheet">
       <runner ref="runner"
-      :midiJson="midiJson"
-      :height="sheetHeight"
-      :width="sheetWidth"
-      :keyWidth="keyWidth"></runner>
+        :midiJson="midiJson"
+        :height="sheetHeight"
+        :width="sheetWidth"
+        :keyWidth="keyWidth"
+        :isPlaying="isPlaying"
+      >
+      </runner>
     </div>
     <div id="keyboard">
       <octave :ref="k" :octaveWidth="octaveWidth" :keyWidth="keyWidth" :key="k" v-for="k in octaveAmount"></octave>
@@ -37,6 +48,7 @@ export default {
       midiJson: null,
       file: null,
       octaveAmount: 5,
+      isPlaying: false,
     };
   },
   mounted() {
@@ -50,7 +62,10 @@ export default {
     this.reader.addEventListener('load', (e) => {
       console.log('reading file', e.target.result);
       this.midiJson = new Midi(e.target.result);
+    });
+    this.reader.addEventListener('loadend', () => {
       console.log('Loaded midi file: ', this.midiJson);
+      this.$refs.runner.parseMidi();
     });
   },
   computed: {
@@ -62,14 +77,16 @@ export default {
       // triggers the load event!
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
     },
-    playMidi() {
-      this.$refs.runner.playMidi();
-    },
   },
 };
 </script>
 
 <style>
+label {
+  color: white;
+  align-self: center;
+  padding-left: 10px;
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -103,5 +120,18 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+}
+
+#midi {
+  display: flex;
+  flex-direction: column;
+  border: solid 1px whitesmoke;
+  justify-content: space-evenly;
+  border-radius: 20px;
+}
+.midi-player {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
 }
 </style>
