@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="player">
-      <div id="midi">
+      <div class="panel">
         <label for="filereader"> Chose a midi file
           <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
         </label>
@@ -12,6 +12,23 @@
           <font-awesome-icon icon="stop" size="2x" :style="{ color: 'white' }"/>
         </div>
       </div>
+    <div class="panel2">
+      <div>
+        <input type="radio" id="contactChoice1"
+        name="contact" value="email">
+        <label for="contactChoice1">Play along</label>
+      </div>
+      <div>
+        <input type="radio" id="contactChoice2"
+        name="contact" value="phone">
+        <label for="contactChoice2">Wait for input</label>
+      </div>
+      <div>
+        <input v-model="tempo" type="range" id="volume" name="volume"
+              min="1" max="60" step="1">
+        <label for="volume">{{tempo}}</label>
+      </div>
+    </div>
     </div>
     <div id="sheet">
       <runner ref="runner"
@@ -20,6 +37,7 @@
         :width="sheetWidth"
         :keyWidth="keyWidth"
         :isPlaying="isPlaying"
+        :tempo="Number(tempo)"
       >
       </runner>
     </div>
@@ -49,6 +67,7 @@ export default {
       file: null,
       octaveAmount: 5,
       isPlaying: false,
+      tempo: 5,
     };
   },
   mounted() {
@@ -122,12 +141,19 @@ html, body {
   height: 100%;
 }
 
-#midi {
+.panel {
   display: flex;
   flex-direction: column;
   border: solid 1px whitesmoke;
   justify-content: space-evenly;
   border-radius: 20px;
+}
+.panel2 {
+  display: flex;
+  border: solid 1px whitesmoke;
+  justify-content: space-evenly;
+  border-radius: 20px;
+  padding: 20px;
 }
 .midi-player {
   display: flex;

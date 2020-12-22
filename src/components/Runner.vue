@@ -16,10 +16,10 @@ export default {
     keyWidth: null,
     midiJson: null,
     isPlaying: Boolean,
+    tempo: Number,
   },
   data() {
     return {
-      tempo: 5,
       notes: {},
       keys: {},
       lowestKey: 36,
@@ -27,9 +27,10 @@ export default {
       isKeyBeingPressed: false,
       sketch: null,
       standardQuarterNoteHeight: 240,
-      position: 0,
+      position: -this.tempo,
       currentTick: 0,
       notesOnStage: [],
+      frameCounter: 0,
     };
   },
   mounted() {
@@ -69,12 +70,10 @@ export default {
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
     minimumMeasure() { return Math.ceil(_.minBy(this.allNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
     scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
-
     startTick() { return _.minBy(this.allNotes, (note) => note.ticks).ticks; },
     lastTick() { return _.maxBy(this.allNotes, (note) => note.ticks).ticks; },
     availableKeys() { return new Set(this.allNotes.map((note) => note.midi)); },
     divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
-    adjustedPosition() { return this.position % this.height; },
   },
   watch: {
     isPlaying(newVal) {
@@ -88,6 +87,9 @@ export default {
     isKeyBeingPressed(newVal) {
       console.log('isKeyBeingPressed');
       console.log(newVal);
+    },
+    tempo() {
+      this.frameCounter = 0;
     },
   },
   methods: {
@@ -119,11 +121,12 @@ export default {
 
     pushNoteOnStage() {
       // when it time to a new tick, put the notes on stage:
-      if (this.position % this.scaledMinMeasure === 0) {
+      if (this.frameCounter % Math.floor(this.scaledMinMeasure / this.tempo) === 0) {
         this.currentTick += 1;
         console.log('new tick!', this.currentTick);
         this.availableKeys.forEach((key) => {
           const note = this.notes[key][this.currentTick];
+          console.log('pushing the note on!', note);
           if (note) this.notesOnStage.push(note);
         });
       }
@@ -195,22 +198,19 @@ export default {
       this.isKeyPressed = false;
       this.$emit('key-up');
     },
-    isNoteStart(note) {
-      const positionY = note.y + this.position;
-      return (this.height - this.keyPressMargin) < positionY && positionY < this.height;
-    },
     isKeyNeedPressed(note) {
       return note.y > this.height && note.y + note.h < this.height;
     },
     render() {
       const sketch = (s) => {
-        s.noLoop();
         s.setup = () => {
           s.createCanvas(this.width, this.height);
+          s.noLoop();
         };
         s.draw = () => {
           s.background(33, 33, 33);
           this.drawDivisions(s);
+          this.frameCounter += this.tempo;
           s.translate(0, this.position += this.tempo);
           this.drawNotes(s);
         };
