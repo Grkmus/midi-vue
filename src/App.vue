@@ -13,20 +13,19 @@
         </div>
       </div>
     <div class="panel2">
-      <div>
+      <div class="component">
+        <label for="contactChoice1">Play along</label>
         <input type="radio" id="contactChoice1"
         name="contact" value="email">
-        <label for="contactChoice1">Play along</label>
-      </div>
-      <div>
+        <label for="contactChoice2">Wait for input</label>
         <input type="radio" id="contactChoice2"
         name="contact" value="phone">
-        <label for="contactChoice2">Wait for input</label>
       </div>
-      <div>
-        <input v-model="tempo" type="range" id="volume" name="volume"
-              min="1" max="60" step="1">
-        <label for="volume">{{tempo}}</label>
+    </div>
+    <div class="panel2">
+      <div class="component">
+        <label for="volume">Tempo: {{bpm}}bpm</label>
+          <input v-model="bpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
       </div>
     </div>
     </div>
@@ -37,7 +36,7 @@
         :width="sheetWidth"
         :keyWidth="keyWidth"
         :isPlaying="isPlaying"
-        :tempo="Number(tempo)"
+        :bpm="Number(bpm)"
       >
       </runner>
     </div>
@@ -67,7 +66,7 @@ export default {
       file: null,
       octaveAmount: 5,
       isPlaying: false,
-      tempo: 5,
+      bpm: 120,
     };
   },
   mounted() {
@@ -81,6 +80,7 @@ export default {
     this.reader.addEventListener('load', (e) => {
       console.log('reading file', e.target.result);
       this.midiJson = new Midi(e.target.result);
+      this.bpm = this.midiJson.header.tempos[0].bpm;
     });
     this.reader.addEventListener('loadend', () => {
       console.log('Loaded midi file: ', this.midiJson);
