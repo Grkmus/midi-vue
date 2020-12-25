@@ -12,22 +12,22 @@
           <font-awesome-icon icon="stop" size="2x" :style="{ color: 'white' }"/>
         </div>
       </div>
-    <div class="panel2">
-      <div class="component">
-        <label for="contactChoice1">Play along</label>
-        <input type="radio" id="contactChoice1"
-        name="contact" value="email">
-        <label for="contactChoice2">Wait for input</label>
-        <input type="radio" id="contactChoice2"
-        name="contact" value="phone">
+      <div class="panel2">
+        <div class="component">
+          <label for="play-along">Play along</label>
+          <input type="radio" id="play-along"
+          name="along" value="true">
+          <label for="wait-input">Wait for input</label>
+          <input type="radio" id="wait-input"
+          name="input" value="wait-input">
+        </div>
       </div>
-    </div>
-    <div class="panel2">
-      <div class="component">
-        <label for="volume">Tempo: {{bpm}}bpm</label>
-          <input v-model="bpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+      <div class="panel2">
+        <div class="component">
+          <label for="volume">Tempo: {{bpm}}bpm</label>
+            <input v-model="bpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+        </div>
       </div>
-    </div>
     </div>
     <div id="sheet">
       <runner ref="runner"
