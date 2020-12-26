@@ -16,10 +16,10 @@
         <div class="component">
           <label for="play-along">Play along</label>
           <input type="radio" id="play-along"
-          name="along" value="true">
+          name="mode" value="playAlong" v-model="mode">
           <label for="wait-input">Wait for input</label>
           <input type="radio" id="wait-input"
-          name="input" value="wait-input">
+          name="mode" value="waitInput" v-model="mode">
         </div>
       </div>
       <div class="panel2">
@@ -37,6 +37,7 @@
         :keyWidth="keyWidth"
         :isPlaying="isPlaying"
         :bpm="Number(bpm)"
+        :mode="mode"
       >
       </runner>
     </div>
@@ -67,6 +68,7 @@ export default {
       octaveAmount: 5,
       isPlaying: false,
       bpm: 120,
+      mode: 'playAlong',
     };
   },
   mounted() {

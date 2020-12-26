@@ -17,6 +17,7 @@ export default {
     midiJson: null,
     isPlaying: Boolean,
     bpm: Number,
+    mode: String,
   },
   data() {
     return {
@@ -126,6 +127,7 @@ export default {
         const note = this.notesOnStage[i];
         note.show();
         if (note.isNoteStart() && !note.isOpen) {
+          if (this.mode === 'waitInput') this.$set(this, 'isPlaying', false);
           note.isOpen = true;
           this.$set(this.notesOnStage, i, note);
           this.noteOn(note, i);
