@@ -32,6 +32,7 @@ export default {
       position: 0,
       currentTick: 0,
       deltaTime: 0,
+      keysToBePressed: [],
     };
   },
   mounted() {
@@ -49,6 +50,9 @@ export default {
           console.log(e);
           const { note } = e;
           this.$set(this.keys, note.number, true);
+          const noteIndex = this.keysToBePressed.indexOf(note.number);
+          if (noteIndex !== -1) { this.keysToBePressed.splice(noteIndex, 1); }
+          if (!this.keysToBePressed.length) this.sketch.loop();
           this.noteOn(note);
         });
         this.midiDevice.addListener('noteoff', 'all', (e) => {
@@ -127,11 +131,17 @@ export default {
         const note = this.notesOnStage[i];
         note.show();
         if (note.isNoteStart() && !note.isOpen) {
-          if (this.mode === 'waitInput') this.$set(this, 'isPlaying', false);
-          note.isOpen = true;
-          this.$set(this.notesOnStage, i, note);
-          this.noteOn(note, i);
-          console.log('note started', note, i);
+          if (this.mode === 'waitInput') {
+            this.keysToBePressed.push(note.number);
+            this.pressKeyComponent(note.octave, note.name);
+            this.$set(this, 'isPlaying', false);
+          }
+          if (this.mode === 'playAlong') {
+            note.isOpen = true;
+            this.$set(this.notesOnStage, i, note);
+            this.noteOn(note, i);
+            console.log('note started', note, i);
+          }
         }
         if (note.isNoteEnd()) {
           this.notesOnStage.splice(i, 1);
