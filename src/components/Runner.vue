@@ -85,6 +85,7 @@ export default {
       console.log('isKeypressed');
       console.log(newVal);
     },
+
     isKeyBeingPressed(newVal) {
       console.log('isKeyBeingPressed');
       console.log(newVal);
@@ -93,9 +94,7 @@ export default {
   methods: {
 
     initializePianoSamples() {
-      this.piano = new Piano({
-        velocities: 2,
-      });
+      this.piano = new Piano({ velocities: 2 });
       this.piano.toDestination();
       this.piano.load().then(() => {
         console.log('loaded!');
@@ -109,7 +108,7 @@ export default {
       }
     },
 
-    fillNotes() {
+    fillSlots() {
       for (let tick = 0; tick < this.lastTick; tick += this.minimumMeasure) {
         this.availableKeys.forEach((key) => {
           this.notes[key].push(false);
@@ -126,6 +125,7 @@ export default {
         }
       });
     },
+
     drawNotes() {
       for (let i = this.notesOnStage.length - 1; i >= 0; i -= 1) {
         const note = this.notesOnStage[i];
@@ -151,13 +151,26 @@ export default {
       }
     },
 
+    noteOn(note) {
+      console.log('Note ON: ', note);
+      this.piano.keyDown({ midi: note.number });
+      this.pressKeyComponent(note.octave, note.name);
+    },
+
+    noteOff(note) {
+      console.log('Note OFF: ', note);
+      this.piano.keyUp({ midi: note.number });
+      this.releaseKeyComponent(note.octave, note.name);
+    },
+
     drawDivisions() {
       for (let i = 0; i < this.width; i += this.keyWidth) {
         this.sketch.line(i, 0, i, this.height);
       }
     },
+
     parseMidi() {
-      this.fillNotes();
+      this.fillSlots();
       this.midiJson.tracks.forEach((track) => {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
@@ -184,12 +197,15 @@ export default {
         });
       });
     },
+
     pressKeyComponent(octave, pitch) {
       this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
     },
+
     releaseKeyComponent(octave, pitch) {
       this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
     },
+
     render() {
       const sketch = (s) => {
         s.setup = () => {
@@ -209,16 +225,6 @@ export default {
         this.sketch = s;
       };
       new P5(sketch, 'canvas');
-    },
-    noteOn(note) {
-      console.log('Note ON: ', note);
-      this.piano.keyDown({ midi: note.number });
-      this.pressKeyComponent(note.octave, note.name);
-    },
-    noteOff(note) {
-      console.log('Note OFF: ', note);
-      this.piano.keyUp({ midi: note.number });
-      this.releaseKeyComponent(note.octave, note.name);
     },
   },
 };
