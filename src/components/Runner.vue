@@ -18,6 +18,9 @@ export default {
     isPlaying: Boolean,
     bpm: Number,
     mode: String,
+    loopEnabled: Boolean,
+    loopStart: Number,
+    loopEnd: Number,
   },
   data() {
     this.cachedNotes = null;
@@ -90,6 +93,18 @@ export default {
       console.log('isKeyBeingPressed');
       console.log(newVal);
     },
+
+    loopEnabled(newVal) {
+      if (newVal) {
+        this.position = this.loopStart;
+        this.$set(this, 'notes', _.cloneDeep(this.cachedNotes));
+      }
+    },
+
+    isPlaying(newVal) {
+      if (newVal) this.piano.toDestination();
+      else this.piano.disconnect();
+    },
   },
   methods: {
 
@@ -153,6 +168,12 @@ export default {
       this.$set(this, 'notes', _.cloneDeep(this.cachedNotes));
     },
 
+    loopInArea() {
+      if (this.position >= this.loopEnd) {
+        this.position = this.loopStart;
+      }
+    },
+
     drawDivisions() {
       for (let i = 0; i < this.width; i += this.keyWidth) {
         this.sketch.line(i, 0, i, this.height);
@@ -208,6 +229,10 @@ export default {
             this.deltaTime = s.deltaTime;
             this.position += this.bpm2px;
           }
+          if (this.loopEnabled) this.loopInArea();
+          s.textSize(32);
+          s.fill(255);
+          s.text(this.position, 30, 60 - this.position);
         };
         this.sketch = s;
       };
