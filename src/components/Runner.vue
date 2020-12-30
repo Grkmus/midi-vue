@@ -20,23 +20,22 @@ export default {
     mode: String,
   },
   data() {
+    this.cachedNotes = null;
     return {
-      notes: {},
       keys: {},
       lowestKey: 36,
       isKeyPressed: false,
       isKeyBeingPressed: false,
       sketch: null,
       standardQuarterNoteHeight: 240,
-      notesOnStage: [],
+      notes: [],
       position: 0,
-      currentTick: 0,
       deltaTime: 0,
       keysToBePressed: [],
     };
   },
   mounted() {
-    this.createNotes();
+    this.createKeys();
     this.render();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
@@ -102,34 +101,15 @@ export default {
       });
     },
 
-    createNotes() {
+    createKeys() {
       for (let i = this.lowestKey; i < 127; i += 1) {
-        this.$set(this.notes, i, []);
         this.$set(this.keys, i, false);
       }
     },
 
-    fillSlots() {
-      for (let tick = 0; tick < this.lastTick; tick += this.minimumMeasure) {
-        this.availableKeys.forEach((key) => {
-          this.notes[key].push(false);
-        });
-      }
-    },
-
-    pushNoteOnStage() {
-      this.currentTick += 1;
-      this.availableKeys.forEach((key) => {
-        const note = this.notes[key][this.currentTick];
-        if (note) {
-          this.notesOnStage.push(note);
-        }
-      });
-    },
-
     drawNotes() {
-      for (let i = this.notesOnStage.length - 1; i >= 0; i -= 1) {
-        const note = this.notesOnStage[i];
+      for (let i = this.notes.length - 1; i >= 0; i -= 1) {
+        const note = this.notes[i];
         note.show();
         if (note.isNoteStart() && !note.isOpen) {
           if (this.mode === 'waitInput') {
@@ -139,14 +119,14 @@ export default {
           }
           if (this.mode === 'playAlong') {
             note.isOpen = true;
-            this.$set(this.notesOnStage, i, note);
+            this.$set(this.notes, i, note);
             this.noteOn(note, i);
             console.log('note started', note, i);
           }
         }
         if (note.isNoteEnd()) {
           note.isOpen = false;
-          this.notesOnStage.splice(i, 1);
+          this.notes.splice(i, 1);
           this.noteOff(note, i);
           console.log('note ended', note, i);
         }
@@ -167,11 +147,10 @@ export default {
 
     stop() {
       this.position = 0;
-      this.currentTick = 0;
-      this.notesOnStage.forEach((note) => {
+      this.notes.forEach((note) => {
         this.noteOff(note);
       });
-      this.$set(this, 'notesOnStage', []);
+      this.$set(this, 'notes', _.cloneDeep(this.cachedNotes));
     },
 
     drawDivisions() {
@@ -181,7 +160,6 @@ export default {
     },
 
     parseMidi() {
-      this.fillSlots();
       this.midiJson.tracks.forEach((track) => {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
@@ -191,10 +169,8 @@ export default {
           } = note;
           const adjustedHeight = -durationTicks * this.divisionRate;
           const adjustedStart = -ticks * this.divisionRate;
-          const slot = Math.floor(ticks / this.minimumMeasure);
-          // note's dimensions to sketch
           const [x, y, w, h] = [(midi - this.lowestKey) * this.keyWidth, adjustedStart, this.keyWidth, adjustedHeight];
-          this.notes[midi][slot] = {
+          this.notes.push({
             number: midi,
             octave,
             name: pitch,
@@ -204,8 +180,9 @@ export default {
             show: () => this.sketch.rect(x, y, w, h, 5),
             isNoteStart: () => this.keyTriggerLocation <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
-          };
+          });
         });
+        this.cachedNotes = _.cloneDeep(this.notes);
       });
     },
 
@@ -228,7 +205,6 @@ export default {
           s.translate(0, this.position);
           this.drawNotes(s);
           if (this.isPlaying) {
-            this.pushNoteOnStage();
             this.deltaTime = s.deltaTime;
             this.position += this.bpm2px;
           }
