@@ -9,7 +9,7 @@
           <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
           <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
           <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
-          <font-awesome-icon icon="stop" size="2x" :style="{ color: 'white' }"/>
+          <font-awesome-icon @click="stop" icon="stop" size="2x" :style="{ color: 'white' }"/>
         </div>
       </div>
       <div class="panel2">
@@ -25,7 +25,7 @@
       <div class="panel2">
         <div class="component">
           <label for="volume">Tempo: {{bpm}}bpm</label>
-            <input v-model="bpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+            <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
         </div>
       </div>
     </div>
@@ -36,7 +36,7 @@
         :width="sheetWidth"
         :keyWidth="keyWidth"
         :isPlaying="isPlaying"
-        :bpm="Number(bpm)"
+        :bpm="bpm"
         :mode="mode"
       >
       </runner>
@@ -67,8 +67,9 @@ export default {
       file: null,
       octaveAmount: 5,
       isPlaying: false,
-      bpm: 120,
+      rawBpm: 120,
       mode: 'playAlong',
+      stopClicked: false,
     };
   },
   mounted() {
@@ -82,7 +83,7 @@ export default {
     this.reader.addEventListener('load', (e) => {
       console.log('reading file', e.target.result);
       this.midiJson = new Midi(e.target.result);
-      this.bpm = this.midiJson.header.tempos[0].bpm;
+      this.rawBpm = this.midiJson.header.tempos[0].bpm;
     });
     this.reader.addEventListener('loadend', () => {
       console.log('Loaded midi file: ', this.midiJson);
@@ -92,11 +93,16 @@ export default {
   computed: {
     octaveWidth() { return this.sheetWidth / this.octaveAmount; },
     keyWidth() { return this.octaveWidth / 12; },
+    bpm() { return Math.round(Number(this.rawBpm)); },
   },
   methods: {
     readFile() {
       // triggers the load event!
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
+    },
+    stop() {
+      this.$emit('stop');
+      this.isPlaying = false;
     },
   },
 };
