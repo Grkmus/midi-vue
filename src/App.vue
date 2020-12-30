@@ -98,6 +98,10 @@ export default {
       // triggers the load event!
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
     },
+    stop() {
+      this.$emit('stop');
+      this.isPlaying = false;
+    },
   },
 };
 </script>

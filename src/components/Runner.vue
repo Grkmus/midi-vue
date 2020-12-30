@@ -40,6 +40,7 @@ export default {
     this.render();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
+    this.$parent.$on('stop', this.stop);
     this.initializePianoSamples();
     WebMidi.enable(() => {
       console.log(WebMidi.inputs);
@@ -144,6 +145,7 @@ export default {
           }
         }
         if (note.isNoteEnd()) {
+          note.isOpen = false;
           this.notesOnStage.splice(i, 1);
           this.noteOff(note, i);
           console.log('note ended', note, i);
@@ -161,6 +163,15 @@ export default {
       console.log('Note OFF: ', note);
       this.piano.keyUp({ midi: note.number });
       this.releaseKeyComponent(note.octave, note.name);
+    },
+
+    stop() {
+      this.position = 0;
+      this.currentTick = 0;
+      this.notesOnStage.forEach((note) => {
+        this.noteOff(note);
+      });
+      this.$set(this, 'notesOnStage', []);
     },
 
     drawDivisions() {
