@@ -32,8 +32,8 @@
         <div class="component">
           <label for="volume">Loop</label>
           <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
-          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1">
-          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1">
+          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled">
+          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled">
         </div>
       </div>
     </div>
@@ -83,7 +83,7 @@ export default {
       stopClicked: false,
       loopEnabled: false,
       rawLoopStart: 2000,
-      rawLoopEnd: 5000,
+      rawLoopEnd: 3000,
     };
   },
   mounted() {

@@ -16,11 +16,15 @@ export default {
       currentVelocity: 0,
     };
   },
+  mounted() {
+    this.$root.$on('reset', this.releaseKey);
+  },
   methods: {
     pressKey(velocity) {
       this.currentVelocity = velocity;
     },
     releaseKey() {
+      console.log('we are in the black key');
       this.currentVelocity = 0;
     },
   },
