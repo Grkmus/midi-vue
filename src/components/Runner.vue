@@ -72,14 +72,13 @@ export default {
     red() { return [213, 7, 76]; },
     blue() { return [3, 132, 252]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
-    allNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
-
+    rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
-    minimumMeasure() { return Math.ceil(_.minBy(this.allNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
+    minimumMeasure() { return Math.ceil(_.minBy(this.rawAllNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
     scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
-    startTick() { return _.minBy(this.allNotes, (note) => note.ticks).ticks; },
-    lastTick() { return _.maxBy(this.allNotes, (note) => note.ticks).ticks; },
-    availableKeys() { return new Set(this.allNotes.map((note) => note.midi)); },
+    startTick() { return _.minBy(this.rawAllNotes, (note) => note.ticks).ticks; },
+    lastTick() { return _.maxBy(this.rawAllNotes, (note) => note.ticks).ticks; },
+    availableKeys() { return new Set(this.rawAllNotes.map((note) => note.midi)); },
     divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
     bpm2px() { return (this.bpm * 4) / (1000 / this.deltaTime); },
   },
@@ -203,6 +202,9 @@ export default {
     },
 
     parseMidi() {
+      this.position = 0;
+      this.$set(this, 'notes', []); // in case the user chose a new file while a song is playing
+      this.resetNoteState();
       this.midiJson.tracks.forEach((track) => {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
