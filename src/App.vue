@@ -1,15 +1,28 @@
 <template>
   <div id="app">
     <div id="player">
+      <div class="panel2">
+        <div>
+          <label for="filereader"> Chose a midi file
+            <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
+          </label>
+        </div>
+        <div>
+          <label for="songs">Or pick a predefined song:</label>
+          <select v-model="selectedSong" name="songs" id="songs" >
+            <option label="Canon in D" value="Canon in D"></option>
+            <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option>
+          </select>
+        </div>
+      </div>
       <div class="panel">
-        <label for="filereader"> Chose a midi file
-          <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
-        </label>
+        <span :style="{ color: 'white' }">Current Song: {{ selectedSong }} </span>
         <div class="midi-player">
           <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
           <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
           <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
           <font-awesome-icon @click="stop" icon="stop" size="2x" :style="{ color: 'white' }"/>
+          <font-awesome-icon icon="step-forward" size="2x" :style="{ color: 'white' }"/>
         </div>
       </div>
       <div class="panel2">
@@ -84,6 +97,9 @@ export default {
       loopEnabled: false,
       rawLoopStart: 2000,
       rawLoopEnd: 3000,
+      publicPath: process.env.BASE_URL,
+      predefinedSongs: [],
+      selectedSong: 'Mozart - Rondo Alla Turca',
     };
   },
   mounted() {
@@ -103,6 +119,18 @@ export default {
       console.log('Loaded midi file: ', this.midiJson);
       this.$refs.runner.parseMidi();
     });
+    fetch(`${this.publicPath}MozartWolfgangAmadeus_AllaTurcaRondo.midi`).then((res) => res.blob()).then((res) => {
+      this.reader.readAsArrayBuffer(res);
+      this.predefinedSongs.push({ name: 'Mozart - Rondo Alla Turca', blob: res });
+    });
+    fetch(`${this.publicPath}Canon_in_D.mid`).then((res) => res.blob()).then((res) => {
+      this.predefinedSongs.push({ name: 'Canon in D', blob: res });
+    });
+  },
+  watch: {
+    selectedSong(newVal) {
+      this.reader.readAsArrayBuffer(this.predefinedSongs.find((song) => song.name === newVal).blob);
+    },
   },
   computed: {
     octaveWidth() { return this.sheetWidth / this.octaveAmount; },
@@ -114,6 +142,7 @@ export default {
   methods: {
     readFile() {
       // triggers the load event!
+      this.isPlaying = false;
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
     },
     stop() {
@@ -166,11 +195,14 @@ html, body {
 }
 
 .panel {
+  width: 20%;
   display: flex;
   flex-direction: column;
   border: solid 1px whitesmoke;
   justify-content: space-evenly;
   border-radius: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 .panel2 {
   display: flex;
@@ -178,6 +210,8 @@ html, body {
   justify-content: space-evenly;
   border-radius: 20px;
   padding: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 .midi-player {
   display: flex;
