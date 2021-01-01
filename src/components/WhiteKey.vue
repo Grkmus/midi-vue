@@ -16,6 +16,9 @@ export default {
       currentVelocity: 0,
     };
   },
+  mounted() {
+    this.$root.$on('reset', this.releaseKey);
+  },
   methods: {
     pressKey(velocity) {
       this.currentVelocity = velocity;

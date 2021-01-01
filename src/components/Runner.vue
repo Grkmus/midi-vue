@@ -18,6 +18,9 @@ export default {
     isPlaying: Boolean,
     bpm: Number,
     mode: String,
+    loopEnabled: Boolean,
+    loopStart: Number,
+    loopEnd: Number,
   },
   data() {
     this.cachedNotes = null;
@@ -90,6 +93,27 @@ export default {
       console.log('isKeyBeingPressed');
       console.log(newVal);
     },
+
+    loopEnabled(newVal) {
+      if (newVal) this.setupForLoop();
+      else {
+        this.$set(this, 'notes', this.cachedNotes.filter((note) => Math.abs(note.position) > this.position - this.height));
+        this.resetNoteState();
+      }
+    },
+
+    loopStart() {
+      this.setupForLoop();
+    },
+
+    loopEnd() {
+      this.setupForLoop();
+    },
+
+    isPlaying(newVal) {
+      if (newVal) this.piano.toDestination();
+      else this.piano.disconnect();
+    },
   },
   methods: {
 
@@ -111,6 +135,7 @@ export default {
       for (let i = this.notes.length - 1; i >= 0; i -= 1) {
         const note = this.notes[i];
         note.show();
+        // note.write();
         if (note.isNoteStart() && !note.isOpen) {
           if (this.mode === 'waitInput') {
             this.keysToBePressed.push(note.number);
@@ -147,10 +172,28 @@ export default {
 
     stop() {
       this.position = 0;
-      this.notes.forEach((note) => {
-        this.noteOff(note);
-      });
       this.$set(this, 'notes', _.cloneDeep(this.cachedNotes));
+      this.resetNoteState();
+    },
+
+    resetNoteState() {
+      this.piano.stopAll();
+      this.notes.forEach((note) => {
+        note.isOpen = false;
+      });
+      this.$root.$emit('reset');
+    },
+
+    loopInArea() {
+      if (this.position >= this.loopEnd + this.height) {
+        this.setupForLoop();
+      }
+    },
+
+    setupForLoop() {
+      this.$set(this, 'notes', this.cachedNotes.filter((note) => Math.abs(note.position) > this.loopStart && Math.abs(note.position) < this.loopEnd));
+      this.resetNoteState();
+      this.position = this.loopStart + this.height;
     },
 
     drawDivisions() {
@@ -177,7 +220,9 @@ export default {
             color: [255, 255, 255],
             velocity: 0,
             isOpen: false,
+            position: y,
             show: () => this.sketch.rect(x, y, w, h, 5),
+            write: () => this.sketch.text(y, x, y + 30),
             isNoteStart: () => this.keyTriggerLocation <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
           });
@@ -203,11 +248,15 @@ export default {
           s.background(33, 33, 33);
           this.drawDivisions(s);
           s.translate(0, this.position);
+          if (this.loopEnabled) this.loopInArea();
           this.drawNotes(s);
           if (this.isPlaying) {
             this.deltaTime = s.deltaTime;
             this.position += this.bpm2px;
           }
+          s.textSize(32);
+          s.fill(255);
+          s.text(this.position, 30, 60 - this.position);
         };
         this.sketch = s;
       };

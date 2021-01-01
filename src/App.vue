@@ -28,6 +28,14 @@
             <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
         </div>
       </div>
+      <div class="panel2">
+        <div class="component">
+          <label for="volume">Loop</label>
+          <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
+          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled">
+          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled">
+        </div>
+      </div>
     </div>
     <div id="sheet">
       <runner ref="runner"
@@ -38,6 +46,9 @@
         :isPlaying="isPlaying"
         :bpm="bpm"
         :mode="mode"
+        :loopEnabled="loopEnabled"
+        :loopStart="loopStart"
+        :loopEnd="loopEnd"
       >
       </runner>
     </div>
@@ -70,6 +81,9 @@ export default {
       rawBpm: 120,
       mode: 'playAlong',
       stopClicked: false,
+      loopEnabled: false,
+      rawLoopStart: 2000,
+      rawLoopEnd: 3000,
     };
   },
   mounted() {
@@ -94,6 +108,8 @@ export default {
     octaveWidth() { return this.sheetWidth / this.octaveAmount; },
     keyWidth() { return this.octaveWidth / 12; },
     bpm() { return Math.round(Number(this.rawBpm)); },
+    loopStart() { return Number(this.rawLoopStart); },
+    loopEnd() { return Number(this.rawLoopEnd); },
   },
   methods: {
     readFile() {
