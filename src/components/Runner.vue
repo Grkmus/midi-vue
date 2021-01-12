@@ -21,6 +21,8 @@ export default {
     loopEnabled: Boolean,
     loopStart: Number,
     loopEnd: Number,
+    leftHand: Boolean,
+    rightHand: Boolean,
   },
   data() {
     this.cachedNotes = null;
@@ -133,7 +135,12 @@ export default {
     drawNotes() {
       for (let i = this.notes.length - 1; i >= 0; i -= 1) {
         const note = this.notes[i];
+        // coloring
+        this.sketch.fill([138, 138, 138]);
+        if (this.leftHand && note.hand === 1) this.sketch.fill(note.color);
+        if (this.rightHand && note.hand === 0) this.sketch.fill(note.color);
         note.show();
+
         // note.write();
         if (note.isNoteStart() && !note.isOpen) {
           if (this.mode === 'waitInput') {
@@ -144,7 +151,8 @@ export default {
           if (this.mode === 'playAlong') {
             note.isOpen = true;
             this.$set(this.notes, i, note);
-            this.noteOn(note, i);
+            if (this.leftHand && note.hand === 1) this.noteOn(note, i);
+            if (this.rightHand && note.hand === 0) this.noteOn(note, i);
             console.log('note started', note, i);
           }
         }
@@ -205,7 +213,7 @@ export default {
       this.position = 0;
       this.$set(this, 'notes', []); // in case the user chose a new file while a song is playing
       this.resetNoteState();
-      this.midiJson.tracks.forEach((track) => {
+      this.midiJson.tracks.forEach((track, index) => {
         console.log('parsing tracks..');
         track.notes.forEach((note) => {
           console.log('parsing notes..');
@@ -216,10 +224,11 @@ export default {
           const adjustedStart = -ticks * this.divisionRate;
           const [x, y, w, h] = [(midi - this.lowestKey) * this.keyWidth, adjustedStart, this.keyWidth, adjustedHeight];
           this.notes.push({
+            hand: index,
             number: midi,
             octave,
             name: pitch,
-            color: [255, 255, 255],
+            color: index === 0 ? [0, 230, 38] : [227, 117, 0],
             velocity: 0,
             isOpen: false,
             position: y,

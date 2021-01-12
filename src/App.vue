@@ -26,14 +26,19 @@
         </div>
       </div>
       <div class="panel2">
-        <div class="component">
-          <label for="play-along">Play along</label>
-          <input type="radio" id="play-along"
-          name="mode" value="playAlong" v-model="mode">
-          <label for="wait-input">Wait for input</label>
-          <input type="radio" id="wait-input"
-          name="mode" value="waitInput" v-model="mode">
-        </div>
+        <label for="play-along">Play along</label>
+        <input type="radio" id="play-along"
+        name="mode" value="playAlong" v-model="mode">
+        <label for="wait-input">Wait for input</label>
+        <input type="radio" id="wait-input"
+        name="mode" value="waitInput" v-model="mode">
+        <label for="left-hand">Left Hand</label>
+        <input type="checkbox" id="left-hand"
+        name="left-hand" value="leftHand" v-model="leftHand">
+        <label for="right-hand">Right Hand</label>
+        <input type="checkbox" id="right-hand"
+        name="left-hand" value="rightHand" v-model="rightHand">
+
       </div>
       <div class="panel2">
         <div class="component">
@@ -45,8 +50,8 @@
         <div class="component">
           <label for="volume">Loop</label>
           <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
-          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled">
-          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled">
+          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled" style="width: 50px">
+          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
         </div>
       </div>
     </div>
@@ -62,6 +67,8 @@
         :loopEnabled="loopEnabled"
         :loopStart="loopStart"
         :loopEnd="loopEnd"
+        :leftHand="leftHand"
+        :rightHand="rightHand"
       >
       </runner>
     </div>
@@ -100,6 +107,8 @@ export default {
       publicPath: process.env.BASE_URL,
       predefinedSongs: [],
       selectedSong: 'Mozart - Rondo Alla Turca',
+      leftHand: true,
+      rightHand: true,
     };
   },
   mounted() {
