@@ -27,17 +27,13 @@
       </div>
       <div class="panel2">
         <label for="play-along">Play along</label>
-        <input type="radio" id="play-along"
-        name="mode" value="playAlong" v-model="mode">
+        <input type="radio" id="play-along" name="mode" value="playAlong" v-model="mode">
         <label for="wait-input">Wait for input</label>
-        <input type="radio" id="wait-input"
-        name="mode" value="waitInput" v-model="mode">
+        <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
         <label for="left-hand">Left Hand</label>
-        <input type="checkbox" id="left-hand"
-        name="left-hand" value="leftHand" v-model="leftHand">
+        <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHand">
         <label for="right-hand">Right Hand</label>
-        <input type="checkbox" id="right-hand"
-        name="left-hand" value="rightHand" v-model="rightHand">
+        <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHand">
 
       </div>
       <div class="panel2">
@@ -54,6 +50,7 @@
           <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
         </div>
       </div>
+      <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/>
     </div>
     <div id="sheet">
       <runner ref="runner"
@@ -69,6 +66,7 @@
         :loopEnd="loopEnd"
         :leftHand="leftHand"
         :rightHand="rightHand"
+        @pause="isPlaying = false"
       >
       </runner>
     </div>
@@ -139,6 +137,10 @@ export default {
   watch: {
     selectedSong(newVal) {
       this.reader.readAsArrayBuffer(this.predefinedSongs.find((song) => song.name === newVal).blob);
+    },
+
+    mode(newValue) {
+      if (newValue === 'playAlong') this.isPlaying = true;
     },
   },
   computed: {
@@ -227,4 +229,5 @@ html, body {
   justify-content: space-evenly;
   align-items: center;
 }
+
 </style>

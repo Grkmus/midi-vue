@@ -36,7 +36,8 @@ export default {
       notes: [],
       position: 0,
       deltaTime: 0,
-      keysToBePressed: [],
+      keysToBePressed: new Set(),
+      bpmScaler: 1,
     };
   },
   mounted() {
@@ -55,9 +56,8 @@ export default {
           console.log(e);
           const { note } = e;
           this.$set(this.keys, note.number, true);
-          const noteIndex = this.keysToBePressed.indexOf(note.number);
-          if (noteIndex !== -1) { this.keysToBePressed.splice(noteIndex, 1); }
-          if (!this.keysToBePressed.length) this.sketch.loop();
+          this.keysToBePressed.delete(note.number);
+          if (!this.keysToBePressed.size) this.$parent.isPlaying = true;
           this.noteOn(note);
         });
         this.midiDevice.addListener('noteoff', 'all', (e) => {
@@ -83,6 +83,7 @@ export default {
     availableKeys() { return new Set(this.rawAllNotes.map((note) => note.midi)); },
     divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
     bpm2px() { return (this.bpm * 4) / (1000 / this.deltaTime); },
+    positionAdder() { return this.bpm2px * this.bpmScaler; },
   },
   watch: {
     isKeyPressed(newVal) {
@@ -112,8 +113,12 @@ export default {
     },
 
     isPlaying(newVal) {
-      if (newVal) this.piano.toDestination();
-      else this.piano.disconnect();
+      if (newVal) this.bpmScaler = 1;
+      else this.bpmScaler = 0;
+    },
+
+    mode(newValue) {
+      if (newValue === 'playAlong') this.keysToBePressed.clear();
     },
   },
   methods: {
@@ -140,13 +145,23 @@ export default {
         if (this.leftHand && note.hand === 1) this.sketch.fill(note.color);
         if (this.rightHand && note.hand === 0) this.sketch.fill(note.color);
         note.show();
-
         // note.write();
         if (note.isNoteStart() && !note.isOpen) {
           if (this.mode === 'waitInput') {
-            this.keysToBePressed.push(note.number);
-            this.pressKeyComponent(note.octave, note.name);
-            this.$set(this, 'isPlaying', false);
+            if (this.leftHand && note.hand === 1) {
+              note.isOpen = true;
+              this.keysToBePressed.add(note.number);
+              console.log(this.keysToBePressed);
+              this.pressKeyComponent(note.octave, note.name);
+              this.$emit('pause');
+            }
+            if (this.rightHand && note.hand === 0) {
+              note.isOpen = true;
+              this.keysToBePressed.add(note.number);
+              console.log(this.keysToBePressed);
+              this.pressKeyComponent(note.octave, note.name);
+              this.$emit('pause');
+            }
           }
           if (this.mode === 'playAlong') {
             note.isOpen = true;
@@ -263,7 +278,7 @@ export default {
           this.drawNotes(s);
           if (this.isPlaying) {
             this.deltaTime = s.deltaTime;
-            this.position += this.bpm2px;
+            this.position += this.positionAdder;
           }
           s.textSize(32);
           s.fill(255);
