@@ -42,7 +42,7 @@ export default {
   },
   mounted() {
     this.createKeys();
-    this.render();
+    this.sketchIt();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
     this.$parent.$on('stop', this.stop);
@@ -265,7 +265,7 @@ export default {
       this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
     },
 
-    render() {
+    sketchIt() {
       const sketch = (s) => {
         s.setup = () => {
           s.createCanvas(this.width, this.height);
