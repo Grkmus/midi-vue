@@ -137,6 +137,22 @@ export default {
       }
     },
 
+    pickMode(note, i) {
+      if (this.mode === 'waitInput') {
+        note.isOpen = true;
+        this.keysToBePressed.add(note.number);
+        console.log(this.keysToBePressed);
+        this.pressKeyComponent(note.octave, note.name);
+        this.$emit('pause');
+      }
+      if (this.mode === 'playAlong') {
+        note.isOpen = true;
+        this.$set(this.notes, i, note);
+        this.noteOn(note, i);
+        console.log('note started', note, i);
+      }
+    },
+
     drawNotes() {
       for (let i = this.notes.length - 1; i >= 0; i -= 1) {
         const note = this.notes[i];
@@ -147,30 +163,14 @@ export default {
         note.show();
         // note.write();
         if (note.isNoteStart() && !note.isOpen) {
-          if (this.mode === 'waitInput') {
-            if (this.leftHandEnabled && note.hand === 'left') {
-              note.isOpen = true;
-              this.keysToBePressed.add(note.number);
-              console.log(this.keysToBePressed);
-              this.pressKeyComponent(note.octave, note.name);
-              this.$emit('pause');
-            }
-            if (this.rightHandEnabled && note.hand === 'right') {
-              note.isOpen = true;
-              this.keysToBePressed.add(note.number);
-              console.log(this.keysToBePressed);
-              this.pressKeyComponent(note.octave, note.name);
-              this.$emit('pause');
-            }
+          if (this.leftHandEnabled && note.hand === 'left') {
+            this.pickMode(note, i);
           }
-          if (this.mode === 'playAlong') {
-            note.isOpen = true;
-            this.$set(this.notes, i, note);
-            if (this.leftHandEnabled && note.hand === 'left') this.noteOn(note, i);
-            if (this.rightHandEnabled && note.hand === 'right') this.noteOn(note, i);
-            console.log('note started', note, i);
+          if (this.rightHandEnabled && note.hand === 'right') {
+            this.pickMode(note, i);
           }
         }
+
         if (note.isNoteEnd()) {
           note.isOpen = false;
           this.notes.splice(i, 1);
