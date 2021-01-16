@@ -31,9 +31,9 @@
         <label for="wait-input">Wait for input</label>
         <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
         <label for="left-hand">Left Hand</label>
-        <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHand">
+        <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
         <label for="right-hand">Right Hand</label>
-        <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHand">
+        <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
 
       </div>
       <div class="panel2">
@@ -64,8 +64,8 @@
         :loopEnabled="loopEnabled"
         :loopStart="loopStart"
         :loopEnd="loopEnd"
-        :leftHand="leftHand"
-        :rightHand="rightHand"
+        :leftHandEnabled="leftHandEnabled"
+        :rightHandEnabled="rightHandEnabled"
         @pause="isPlaying = false"
       >
       </runner>
@@ -105,8 +105,8 @@ export default {
       publicPath: process.env.BASE_URL,
       predefinedSongs: [],
       selectedSong: 'Mozart - Rondo Alla Turca',
-      leftHand: true,
-      rightHand: true,
+      leftHandEnabled: true,
+      rightHandEnabled: true,
     };
   },
   mounted() {

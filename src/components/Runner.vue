@@ -21,8 +21,8 @@ export default {
     loopEnabled: Boolean,
     loopStart: Number,
     loopEnd: Number,
-    leftHand: Boolean,
-    rightHand: Boolean,
+    leftHandEnabled: Boolean,
+    rightHandEnabled: Boolean,
   },
   data() {
     this.cachedNotes = null;
@@ -142,20 +142,20 @@ export default {
         const note = this.notes[i];
         // coloring
         this.sketch.fill([138, 138, 138]);
-        if (this.leftHand && note.hand === 1) this.sketch.fill(note.color);
-        if (this.rightHand && note.hand === 0) this.sketch.fill(note.color);
+        if (this.leftHandEnabled && note.hand === 'left') this.sketch.fill(note.color);
+        if (this.rightHandEnabled && note.hand === 'right') this.sketch.fill(note.color);
         note.show();
         // note.write();
         if (note.isNoteStart() && !note.isOpen) {
           if (this.mode === 'waitInput') {
-            if (this.leftHand && note.hand === 1) {
+            if (this.leftHandEnabled && note.hand === 'left') {
               note.isOpen = true;
               this.keysToBePressed.add(note.number);
               console.log(this.keysToBePressed);
               this.pressKeyComponent(note.octave, note.name);
               this.$emit('pause');
             }
-            if (this.rightHand && note.hand === 0) {
+            if (this.rightHandEnabled && note.hand === 'right') {
               note.isOpen = true;
               this.keysToBePressed.add(note.number);
               console.log(this.keysToBePressed);
@@ -166,8 +166,8 @@ export default {
           if (this.mode === 'playAlong') {
             note.isOpen = true;
             this.$set(this.notes, i, note);
-            if (this.leftHand && note.hand === 1) this.noteOn(note, i);
-            if (this.rightHand && note.hand === 0) this.noteOn(note, i);
+            if (this.leftHandEnabled && note.hand === 'left') this.noteOn(note, i);
+            if (this.rightHandEnabled && note.hand === 'right') this.noteOn(note, i);
             console.log('note started', note, i);
           }
         }
@@ -239,7 +239,7 @@ export default {
           const adjustedStart = -ticks * this.divisionRate;
           const [x, y, w, h] = [(midi - this.lowestKey) * this.keyWidth, adjustedStart, this.keyWidth, adjustedHeight];
           this.notes.push({
-            hand: index,
+            hand: index === 1 ? 'left' : 'right',
             number: midi,
             octave,
             name: pitch,
