@@ -3,7 +3,6 @@
 </template>
 
 <script>
-import WebMidi from 'webmidi';
 import P5 from 'p5';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
@@ -23,6 +22,7 @@ export default {
     loopEnd: Number,
     leftHandEnabled: Boolean,
     rightHandEnabled: Boolean,
+    midiDevice: Object,
   },
   data() {
     this.cachedNotes = null;
@@ -47,27 +47,6 @@ export default {
     document.addEventListener('keyup', this.keyUp);
     this.$parent.$on('stop', this.stop);
     this.initializePianoSamples();
-    WebMidi.enable(() => {
-      console.log(WebMidi.inputs);
-      console.log(WebMidi.outputs);
-      this.midiDevice = WebMidi.getInputByName('GO:KEYS');
-      if (this.midiDevice) {
-        this.midiDevice.addListener('noteon', 'all', (e) => {
-          console.log(e);
-          const { note } = e;
-          this.$set(this.keys, note.number, true);
-          this.keysToBePressed.delete(note.number);
-          if (!this.keysToBePressed.size) this.$parent.isPlaying = true;
-          this.noteOn(note);
-        });
-        this.midiDevice.addListener('noteoff', 'all', (e) => {
-          console.log(e);
-          const { note } = e;
-          this.$set(this.keys, note.number, false);
-          this.noteOff(note);
-        });
-      }
-    });
   },
   computed: {
     green() { return [52, 206, 77]; },
@@ -86,6 +65,24 @@ export default {
     positionAdder() { return this.bpm2px * this.bpmScaler; },
   },
   watch: {
+    // need to add listeners again whenever the device changes
+    midiDevice() {
+      this.midiDevice.addListener('noteon', 'all', (e) => {
+        console.log(e);
+        const { note } = e;
+        this.$set(this.keys, note.number, true);
+        this.keysToBePressed.delete(note.number);
+        if (!this.keysToBePressed.size) this.$parent.isPlaying = true;
+        this.noteOn(note);
+      });
+      this.midiDevice.addListener('noteoff', 'all', (e) => {
+        console.log(e);
+        const { note } = e;
+        this.$set(this.keys, note.number, false);
+        this.noteOff(note);
+      });
+    },
+
     isKeyPressed(newVal) {
       console.log('isKeypressed');
       console.log(newVal);

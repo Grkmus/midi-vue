@@ -50,7 +50,16 @@
           <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
         </div>
       </div>
-      <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/>
+      <div class="panel2">
+        <div class="component">
+          <label for="songs">Select Midi Input</label>
+          <select v-model="selectedInput" name="songs" id="songs" >
+            <option :key="input" v-html="input" :value="input" v-for="input in availableInputs"></option>
+            <!-- <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option> -->
+          </select>
+        </div>
+      </div>
+      <!-- <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/> -->
     </div>
     <div id="sheet">
       <runner ref="runner"
@@ -67,6 +76,7 @@
         :leftHandEnabled="leftHandEnabled"
         :rightHandEnabled="rightHandEnabled"
         @pause="isPlaying = false"
+        :midi-device="midiDevice"
       >
       </runner>
     </div>
@@ -77,6 +87,7 @@
 </template>
 
 <script>
+import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
 import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
@@ -107,9 +118,20 @@ export default {
       selectedSong: 'Mozart - Rondo Alla Turca',
       leftHandEnabled: true,
       rightHandEnabled: true,
+      selectedInput: null,
+      availableInputs: null,
+      midiDevice: null,
     };
   },
+
   mounted() {
+    WebMidi.enable(() => {
+      console.log(WebMidi.inputs);
+      console.log(WebMidi.outputs);
+      this.availableInputs = WebMidi.inputs.map((input) => input.name);
+      this.selectedInput = this.availableInputs[0]; //eslint-disable-line
+    });
+
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
 
@@ -141,6 +163,10 @@ export default {
 
     mode(newValue) {
       if (newValue === 'playAlong') this.isPlaying = true;
+    },
+
+    selectedInput(newVal) {
+      this.midiDevice = WebMidi.getInputByName(newVal);
     },
   },
   computed: {
