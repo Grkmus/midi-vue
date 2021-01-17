@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="player">
-      <div id="about" style="border: 0px">
+      <div id="about">
         <h1 :style="{'margin-top': '0px'}"><a href="/" >Play Piano Online</a></h1>
         <label>About The Author</label>
         <div id="icon-container">
@@ -11,19 +11,15 @@
           <a target="_blank" href="https://gorkemtosun.com/"><font-awesome-icon :icon="['fa', 'globe']" size="2x"/></a>
         </div>
       </div>
-      <!-- <div :style="{'border': '0px', 'width': '250px', 'margin-top': '0px'}">
-        <p>This is an open source project. You can find the repo <a href="">here.</a> Please do feedback and feel free to open issues on the github page.</p>
-      </div> -->
       <div id="player-options">
         <div class="module">
           <h3 class="panel-header">Song</h3>
           <div class="panel">
-            <div>
-              <label for="filereader"> Chose a midi file
-                <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
-              </label>
+            <div class="container">
+              <label for="filereader"> Chose a midi file</label>
+              <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader" style="width: 140px">
             </div>
-            <div>
+            <div class="container">
               <label for="songs">Or pick a predefined song:</label>
               <select v-model="selectedSong" name="songs" id="songs" >
                 <option label="Canon in D" value="Canon in D"></option>
@@ -79,7 +75,6 @@
             </select>
           </div>
         </div>
-        <!-- <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/> -->
       </div>
     </div>
     <div id="sheet">
@@ -216,6 +211,11 @@ export default {
 </script>
 
 <style>
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+}
 #icon-container {
   display: flex;
   justify-content: space-evenly;
@@ -234,7 +234,6 @@ label {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  /* color: #2c3e50; */
   margin-top: 0;
   height: 100%;
 }
@@ -253,7 +252,6 @@ label {
   background: #2c3e50;
   z-index: 1;
   flex-wrap: wrap;
-  padding: 20px;
 }
 #sheet {
   display: flex;
@@ -277,7 +275,10 @@ html, body {
 }
 
 #about {
-  padding: 20px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
 }
 
 input {
@@ -308,22 +309,15 @@ select {
   padding: 2px;
   margin: 0px;
   border-bottom: 1px groove
-  /* margin-bottom: 0px; */
 }
 
 .truncate {
-  width: 250px;
+  width: 10vw;
   white-space: nowrap;
   overflow: hidden;
   display:block;
   padding-bottom: 8px;
   text-overflow: ellipsis
-  /* overflow: hidden;
-  display: block; */
-}
-
-.sub-panel {
-  display: flex;
 }
 
 a, a:visited, a:hover, a:active {
