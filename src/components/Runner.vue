@@ -123,6 +123,7 @@ export default {
     initializePianoSamples() {
       this.piano = new Piano({ velocities: 2 });
       this.piano.toDestination();
+      this.piano.output.gain.value = 0.5;
       this.piano.load().then(() => {
         console.log('loaded!');
       });
@@ -279,7 +280,7 @@ export default {
           }
           s.textSize(32);
           s.fill(255);
-          s.text(this.position, 30, 60 - this.position);
+          s.text(Math.round(this.position), 30, 60 - this.position);
         };
         this.sketch = s;
       };

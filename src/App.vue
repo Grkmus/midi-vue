@@ -1,63 +1,81 @@
 <template>
   <div id="app">
     <div id="player">
-      <h1>Midi Piano Practice</h1>
+      <div id="about" style="border: 0px">
+        <h1 :style="{'margin-top': '0px'}"><a href="/" >Play Piano Online</a></h1>
+        <label>About The Author</label>
+        <div id="icon-container">
+          <a target="_blank" href="https://github.com/Grkmus"><font-awesome-icon :icon="['fab', 'github']" size="2x"/></a>
+          <a target="_blank" href="https://twitter.com/tosungo"><font-awesome-icon :icon="['fab', 'twitter']" size="2x"/></a>
+          <a target="_blank" href="https://www.instagram.com/tosungo/"><font-awesome-icon :icon="['fab', 'instagram']" size="2x"/></a>
+          <a target="_blank" href="https://gorkemtosun.com/"><font-awesome-icon :icon="['fa', 'globe']" size="2x"/></a>
+        </div>
+      </div>
+      <!-- <div :style="{'border': '0px', 'width': '250px', 'margin-top': '0px'}">
+        <p>This is an open source project. You can find the repo <a href="">here.</a> Please do feedback and feel free to open issues on the github page.</p>
+      </div> -->
       <div id="player-options">
-        <div class="panel2">
-          <div>
-            <label for="filereader"> Chose a midi file
-              <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
-            </label>
-          </div>
-          <div>
-            <label for="songs">Or pick a predefined song:</label>
-            <select v-model="selectedSong" name="songs" id="songs" >
-              <option label="Canon in D" value="Canon in D"></option>
-              <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option>
-            </select>
-          </div>
-        </div>
-        <div class="panel">
-          <span :style="{ color: 'white' }">Current Song: {{ selectedSong }} </span>
-          <div class="midi-player">
-            <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
-            <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
-            <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
-            <font-awesome-icon @click="stop" icon="stop" size="2x" :style="{ color: 'white' }"/>
-            <font-awesome-icon icon="step-forward" size="2x" :style="{ color: 'white' }"/>
+        <div class="module">
+          <h3 class="panel-header">Song</h3>
+          <div class="panel">
+            <div>
+              <label for="filereader"> Chose a midi file
+                <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
+              </label>
+            </div>
+            <div>
+              <label for="songs">Or pick a predefined song:</label>
+              <select v-model="selectedSong" name="songs" id="songs" >
+                <option label="Canon in D" value="Canon in D"></option>
+                <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option>
+              </select>
+            </div>
           </div>
         </div>
-        <div class="panel2">
-          <label for="play-along">Play along</label>
-          <input type="radio" id="play-along" name="mode" value="playAlong" v-model="mode">
-          <label for="wait-input">Wait for input</label>
-          <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
-          <label for="left-hand">Left Hand</label>
-          <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
-          <label for="right-hand">Right Hand</label>
-          <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
-
+        <div class="module">
+          <h3 class="panel-header">Player</h3>
+          <div class="panel">
+            <font-awesome-icon icon="step-backward" size="2x"/>
+            <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x"/>
+            <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x"/>
+            <font-awesome-icon @click="stop" icon="stop" size="2x"/>
+            <font-awesome-icon icon="step-forward" size="2x"/>
+          </div>
+          <span class="truncate">Current Song: {{ fileName || selectedSong }} </span>
         </div>
-        <div class="panel2">
-          <div class="component">
-            <label for="volume">Tempo: {{bpm}}bpm</label>
-              <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+        <div class="module">
+          <h3 class="panel-header">Mods</h3>
+          <div class="panel">
+            <label for="play-along">Play along</label>
+            <input type="radio" id="play-along" name="mode" value="playAlong" v-model="mode">
+            <label for="wait-input">Wait for input</label>
+            <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
+            <label for="left-hand">Left Hand</label>
+            <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
+            <label for="right-hand">Right Hand</label>
+            <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
           </div>
         </div>
-        <div class="panel2">
-          <div class="component">
-            <label for="volume">Loop</label>
+        <div class="module">
+          <h3 class="panel-header">Tempo</h3>
+          <div class="panel">
+            <label for="volume">{{bpm}}bpm</label>
+            <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+          </div>
+        </div>
+        <div class="module">
+          <h3 class="panel-header">Looping</h3>
+          <div class="panel">
             <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
             <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled" style="width: 50px">
             <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
           </div>
         </div>
-        <div class="panel2">
-          <div class="component">
-            <label for="songs">Select Midi Input</label>
-            <select v-model="selectedInput" name="songs" id="songs" >
+        <div class="module">
+          <h3 class="panel-header">Midi Input</h3>
+          <div class="panel">
+            <select v-model="selectedInput" name="songs" id="songs">
               <option :key="input" v-html="input" :value="input" v-for="input in availableInputs"></option>
-              <!-- <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option> -->
             </select>
           </div>
         </div>
@@ -107,7 +125,7 @@ export default {
       sheetHeight: null,
       sheetWidth: null,
       midiJson: null,
-      file: null,
+      rawFileName: null,
       octaveAmount: 7,
       isPlaying: false,
       rawBpm: 120,
@@ -138,11 +156,11 @@ export default {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
 
-    this.file = this.$refs.filereader;
     this.reader.addEventListener('onerror', (e) => {
       console.log('load different.', e);
     });
     this.reader.addEventListener('load', (e) => {
+      // debugger;
       console.log('reading file', e.target.result);
       this.midiJson = new Midi(e.target.result);
       this.rawBpm = this.midiJson.header.tempos[0].bpm;
@@ -162,6 +180,8 @@ export default {
   watch: {
     selectedSong(newVal) {
       this.reader.readAsArrayBuffer(this.predefinedSongs.find((song) => song.name === newVal).blob);
+      this.$refs.filereader.value = '';
+      this.rawFileName = '';
     },
 
     mode(newValue) {
@@ -178,12 +198,14 @@ export default {
     bpm() { return Math.round(Number(this.rawBpm)); },
     loopStart() { return Number(this.rawLoopStart); },
     loopEnd() { return Number(this.rawLoopEnd); },
+    fileName() { return this.rawFileName?.split('.')[0]; },
   },
   methods: {
     readFile() {
       // triggers the load event!
       this.isPlaying = false;
       this.reader.readAsArrayBuffer(this.$refs.filereader.files[0]);
+      this.rawFileName = this.$refs.filereader.files[0].name;
     },
     stop() {
       this.$emit('stop');
@@ -194,11 +216,13 @@ export default {
 </script>
 
 <style>
+#icon-container {
+  display: flex;
+  justify-content: space-evenly;
+}
 h1 {
   color: white;
-  padding: 0px;
-  margin: 0px;
-  margin-bottom: 5px;
+  position: relative;
 }
 label {
   color: white;
@@ -210,14 +234,15 @@ label {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  color: #2c3e50;
+  /* color: #2c3e50; */
   margin-top: 0;
   height: 100%;
 }
 #player {
+  display: flex;
   position: relative;
   height: 10%;
-  justify-content: center;
+  justify-content: space-around;
   background: #2c3e50;
   z-index: 1;
 }
@@ -227,48 +252,82 @@ label {
   justify-content: center;
   background: #2c3e50;
   z-index: 1;
+  flex-wrap: wrap;
+  padding: 20px;
 }
 #sheet {
   display: flex;
-  height: 70%;
+  height: 75%;
   width: 100%;
 }
 #keyboard {
   display: flex;
   width: 100%;
-  height: 20%;
+  height: 15%;
+  color: #2c3e50;
 }
 
 html, body {
   background-color: rgb(59, 54, 54);
+  color: white;
   margin: 0;
   padding: 0;
   height: 100%;
+  font-size: 0.5vw;
+}
+
+#about {
+  padding: 20px;
+}
+
+input {
+  font-size: 0.5vw;
+}
+select {
+  font-size: 0.5vw;
+}
+
+.module {
+  border: solid 1px whitesmoke;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .panel {
-  width: 20%;
-  display: flex;
-  flex-direction: column;
-  border: solid 1px whitesmoke;
-  justify-content: space-evenly;
-  border-radius: 20px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-.panel2 {
-  display: flex;
-  border: solid 1px whitesmoke;
-  justify-content: space-evenly;
-  border-radius: 20px;
-  padding: 20px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-.midi-player {
   display: flex;
   justify-content: space-evenly;
   align-items: center;
+  margin: 5px;
+  height: 100%;
+}
+.panel-header {
+  padding: 2px;
+  margin: 0px;
+  border-bottom: 1px groove
+  /* margin-bottom: 0px; */
 }
 
+.truncate {
+  width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  display:block;
+  padding-bottom: 8px;
+  text-overflow: ellipsis
+  /* overflow: hidden;
+  display: block; */
+}
+
+.sub-panel {
+  display: flex;
+}
+
+a, a:visited, a:hover, a:active {
+  color: inherit;
+  text-decoration: none !important;
+}
 </style>
