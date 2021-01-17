@@ -53,6 +53,7 @@ export default {
     red() { return [213, 7, 76]; },
     blue() { return [3, 132, 252]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
+    keyOffLocation() { return this.height + this.bpm2px; },
     rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
     minimumMeasure() { return Math.ceil(_.minBy(this.rawAllNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
@@ -247,7 +248,7 @@ export default {
             position: y,
             show: () => this.sketch.rect(x, y, w, h, 5),
             write: () => this.sketch.text(y, x, y + 30),
-            isNoteStart: () => this.keyTriggerLocation <= y + this.position,
+            isNoteStart: () => this.height <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
           });
         });
@@ -280,7 +281,7 @@ export default {
           }
           s.textSize(32);
           s.fill(255);
-          s.text(Math.round(this.position), 30, 60 - this.position);
+          s.text(Math.round(this.position) - this.height, 30, 60 - this.position);
         };
         this.sketch = s;
       };
