@@ -28,7 +28,7 @@ export default {
     this.cachedNotes = null;
     return {
       keys: {},
-      lowestKey: 36,
+      lowestKey: 24,
       isKeyPressed: false,
       isKeyBeingPressed: false,
       sketch: null,
@@ -129,7 +129,7 @@ export default {
     },
 
     createKeys() {
-      for (let i = this.lowestKey; i < 127; i += 1) {
+      for (let i = this.lowestKey; i < 108; i += 1) {
         this.$set(this.keys, i, false);
       }
     },
@@ -255,11 +255,11 @@ export default {
     },
 
     pressKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55);
+      this.$parent.$refs[octave][0].$refs[pitch].pressKey(55);
     },
 
     releaseKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey();
+      this.$parent.$refs[octave][0].$refs[pitch].releaseKey();
     },
 
     sketchIt() {

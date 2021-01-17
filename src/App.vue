@@ -1,65 +1,68 @@
 <template>
   <div id="app">
     <div id="player">
-      <div class="panel2">
-        <div>
-          <label for="filereader"> Chose a midi file
-            <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
-          </label>
+      <h1>Midi Piano Practice</h1>
+      <div id="player-options">
+        <div class="panel2">
+          <div>
+            <label for="filereader"> Chose a midi file
+              <input @change="readFile" type="file" name="filereader" ref="filereader" id="filereader">
+            </label>
+          </div>
+          <div>
+            <label for="songs">Or pick a predefined song:</label>
+            <select v-model="selectedSong" name="songs" id="songs" >
+              <option label="Canon in D" value="Canon in D"></option>
+              <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label for="songs">Or pick a predefined song:</label>
-          <select v-model="selectedSong" name="songs" id="songs" >
-            <option label="Canon in D" value="Canon in D"></option>
-            <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option>
-          </select>
+        <div class="panel">
+          <span :style="{ color: 'white' }">Current Song: {{ selectedSong }} </span>
+          <div class="midi-player">
+            <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
+            <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
+            <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
+            <font-awesome-icon @click="stop" icon="stop" size="2x" :style="{ color: 'white' }"/>
+            <font-awesome-icon icon="step-forward" size="2x" :style="{ color: 'white' }"/>
+          </div>
         </div>
-      </div>
-      <div class="panel">
-        <span :style="{ color: 'white' }">Current Song: {{ selectedSong }} </span>
-        <div class="midi-player">
-          <font-awesome-icon icon="step-backward" size="2x" :style="{ color: 'white' }"/>
-          <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x" :style="{ color: 'white' }"/>
-          <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" :style="{ color: 'white' }"/>
-          <font-awesome-icon @click="stop" icon="stop" size="2x" :style="{ color: 'white' }"/>
-          <font-awesome-icon icon="step-forward" size="2x" :style="{ color: 'white' }"/>
-        </div>
-      </div>
-      <div class="panel2">
-        <label for="play-along">Play along</label>
-        <input type="radio" id="play-along" name="mode" value="playAlong" v-model="mode">
-        <label for="wait-input">Wait for input</label>
-        <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
-        <label for="left-hand">Left Hand</label>
-        <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
-        <label for="right-hand">Right Hand</label>
-        <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
+        <div class="panel2">
+          <label for="play-along">Play along</label>
+          <input type="radio" id="play-along" name="mode" value="playAlong" v-model="mode">
+          <label for="wait-input">Wait for input</label>
+          <input type="radio" id="wait-input" name="mode" value="waitInput" v-model="mode">
+          <label for="left-hand">Left Hand</label>
+          <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
+          <label for="right-hand">Right Hand</label>
+          <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
 
-      </div>
-      <div class="panel2">
-        <div class="component">
-          <label for="volume">Tempo: {{bpm}}bpm</label>
-            <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
         </div>
-      </div>
-      <div class="panel2">
-        <div class="component">
-          <label for="volume">Loop</label>
-          <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
-          <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled" style="width: 50px">
-          <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
+        <div class="panel2">
+          <div class="component">
+            <label for="volume">Tempo: {{bpm}}bpm</label>
+              <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+          </div>
         </div>
-      </div>
-      <div class="panel2">
-        <div class="component">
-          <label for="songs">Select Midi Input</label>
-          <select v-model="selectedInput" name="songs" id="songs" >
-            <option :key="input" v-html="input" :value="input" v-for="input in availableInputs"></option>
-            <!-- <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option> -->
-          </select>
+        <div class="panel2">
+          <div class="component">
+            <label for="volume">Loop</label>
+            <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
+            <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled" style="width: 50px">
+            <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
+          </div>
         </div>
+        <div class="panel2">
+          <div class="component">
+            <label for="songs">Select Midi Input</label>
+            <select v-model="selectedInput" name="songs" id="songs" >
+              <option :key="input" v-html="input" :value="input" v-for="input in availableInputs"></option>
+              <!-- <option label="Mozart - Rondo Alla Turca" value="Mozart - Rondo Alla Turca"></option> -->
+            </select>
+          </div>
+        </div>
+        <!-- <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/> -->
       </div>
-      <!-- <font-awesome-icon icon="cog" size="2x" :style="{ color: 'white' }"/> -->
     </div>
     <div id="sheet">
       <runner ref="runner"
@@ -105,7 +108,7 @@ export default {
       sheetWidth: null,
       midiJson: null,
       file: null,
-      octaveAmount: 5,
+      octaveAmount: 7,
       isPlaying: false,
       rawBpm: 120,
       mode: 'playAlong',
@@ -191,6 +194,12 @@ export default {
 </script>
 
 <style>
+h1 {
+  color: white;
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 5px;
+}
 label {
   color: white;
   align-self: center;
@@ -207,21 +216,27 @@ label {
 }
 #player {
   position: relative;
+  height: 10%;
+  justify-content: center;
+  background: #2c3e50;
+  z-index: 1;
+}
+#player-options {
+  position: relative;
   display: flex;
-  height: 5%;
   justify-content: center;
   background: #2c3e50;
   z-index: 1;
 }
 #sheet {
   display: flex;
-  height: 80%;
+  height: 70%;
   width: 100%;
 }
 #keyboard {
   display: flex;
   width: 100%;
-  height: 15%;
+  height: 20%;
 }
 
 html, body {

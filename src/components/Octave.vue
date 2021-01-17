@@ -70,14 +70,17 @@ export default {
   background-color: whitesmoke;
   margin: 0;
   padding: 0;
+  box-shadow: inset 0 0 5px #4d4c4c;
 }
 
 .black-key {
   height: calc(100% / 1.5);
   border-radius: 5px;
-  background-color: rgb(27, 27, 32);
+  background-color: rgb(49, 49, 49);
   margin: 0;
   padding: 0;
   position: absolute;
+  border: 1px solid black;
+  box-shadow: 0px 0px 5px #4d4c4c;
 }
 </style>
