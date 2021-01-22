@@ -75,7 +75,7 @@ export default {
         const { note } = e;
         this.$set(this.keys, note.number, true);
         this.keysToBePressed.delete(note.number);
-        if (!this.keysToBePressed.size) this.$parent.isPlaying = true;
+        if (!this.keysToBePressed.size && this.mode === 'waitInput') this.$parent.isPlaying = true;
         this.noteOn(note);
       });
       this.midiDevice.addListener('noteoff', 'all', (e) => {
