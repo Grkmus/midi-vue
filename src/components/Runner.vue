@@ -50,7 +50,9 @@ export default {
   },
   computed: {
     green() { return [52, 206, 77]; },
-    red() { return [213, 7, 76]; },
+    darkGreen() { return [50, 117, 61]; },
+    red() { return [245, 22, 22]; },
+    darkRed() { return [128, 38, 38]; },
     blue() { return [3, 132, 252]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
     keyOffLocation() { return this.height + this.bpm2px; },
@@ -162,6 +164,8 @@ export default {
         note.show();
         // note.write();
         if (note.isNoteStart() && !note.isOpen) {
+          console.log('fill with ');
+          note.color = [59, 96, 133];
           if (this.leftHandEnabled && note.hand === 'left') {
             this.pickMode(note, i);
           }
@@ -181,6 +185,7 @@ export default {
 
     noteOn(note) {
       console.log('Note ON: ', note);
+
       this.piano.keyDown({ midi: note.number });
       this.pressKeyComponent(note.octave, note.name);
     },
@@ -242,7 +247,7 @@ export default {
             number: midi,
             octave,
             name: pitch,
-            color: index === 0 ? [0, 230, 38] : [227, 117, 0],
+            color: this.pickColor(index, note),
             velocity: 0,
             isOpen: false,
             position: y,
@@ -254,6 +259,17 @@ export default {
         });
         this.cachedNotes = _.cloneDeep(this.notes);
       });
+    },
+
+    pickColor(index, note) {
+      const colorOptions = {
+        // for each option: [condition, result]
+        rightHandSharp: [index === 0 && note.name.includes('#'), this.darkRed],
+        leftHandSharp: [index === 1 && note.name.includes('#'), this.darkGreen],
+        rightHand: [index === 0, this.red],
+        leftHand: [index === 1, this.green],
+      };
+      return Object.values(colorOptions).find((options) => options[0])[1];
     },
 
     pressKeyComponent(octave, pitch) {
