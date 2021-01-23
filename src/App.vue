@@ -50,6 +50,8 @@
             <input type="checkbox" id="left-hand" name="left-hand" value="leftHand" v-model="leftHandEnabled">
             <label for="right-hand">Right Hand</label>
             <input type="checkbox" id="right-hand" name="left-hand" value="rightHand" v-model="rightHandEnabled">
+            <label for="right-hand">Show Note Text</label>
+            <input type="checkbox" id="show-text" name="show-text" v-model="showNoteText">
           </div>
         </div>
         <div class="module">
@@ -63,8 +65,8 @@
           <h3 class="panel-header">Looping</h3>
           <div class="panel">
             <input v-model="loopEnabled" type="checkbox" id="volume" name="volume" min="1" max="240" step="1">
-            <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1" :disabled="!loopEnabled" style="width: 50px">
-            <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1" :disabled="!loopEnabled" style="width: 50px">
+            <input v-model="rawLoopStart" type="number" id="loop-start" name="loop-start" step="1000" :disabled="!loopEnabled" style="width: 50px">
+            <input v-model="rawLoopEnd" type="number" id="loop-end" name="loop-end" step="1000" :disabled="!loopEnabled" style="width: 50px">
           </div>
         </div>
         <div class="module">
@@ -93,6 +95,7 @@
         :rightHandEnabled="rightHandEnabled"
         @pause="isPlaying = false"
         :midi-device="midiDevice"
+        :showNoteText="showNoteText"
       >
       </runner>
     </div>
@@ -137,6 +140,7 @@ export default {
       selectedInput: null,
       availableInputs: null,
       midiDevice: null,
+      showNoteText: true,
     };
   },
 
