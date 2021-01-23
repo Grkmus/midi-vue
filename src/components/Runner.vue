@@ -241,7 +241,8 @@ export default {
           } = note;
           const adjustedHeight = -durationTicks * this.divisionRate;
           const adjustedStart = -ticks * this.divisionRate;
-          const [x, y, w, h] = [(midi - this.lowestKey) * this.keyWidth, adjustedStart, this.keyWidth, adjustedHeight];
+          const offset = this.getOffset(note);
+          const [x, y, w, h] = [((midi - this.lowestKey) * this.keyWidth) + offset, adjustedStart, this.keyWidth, adjustedHeight];
           this.notes.push({
             hand: index === 1 ? 'left' : 'right',
             number: midi,
@@ -259,6 +260,21 @@ export default {
         });
         this.cachedNotes = _.cloneDeep(this.notes);
       });
+    },
+
+    getOffset(note) {
+      const offsets = {
+        'C#': 2,
+        'D#': 4,
+        'F#': 6,
+        'G#': 4,
+        G: 5,
+        A: 3,
+        E: 3,
+        F: 5,
+        D: 5,
+      };
+      return _.get(offsets, note.pitch, 0);
     },
 
     pickColor(index, note) {
