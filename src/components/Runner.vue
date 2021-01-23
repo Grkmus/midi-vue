@@ -222,12 +222,6 @@ export default {
       this.position = this.loopStart + this.height;
     },
 
-    drawDivisions() {
-      for (let i = 0; i < this.width; i += this.keyWidth) {
-        this.sketch.line(i, 0, i, this.height);
-      }
-    },
-
     parseMidi() {
       this.position = 0;
       this.$set(this, 'notes', []); // in case the user chose a new file while a song is playing
@@ -303,7 +297,6 @@ export default {
         };
         s.draw = () => {
           s.background(33, 33, 33);
-          this.drawDivisions(s);
           s.translate(0, this.position);
           if (this.loopEnabled) this.loopInArea();
           this.drawNotes(s);
