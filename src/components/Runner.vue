@@ -41,10 +41,13 @@ export default {
     };
   },
   mounted() {
-    this.createKeys();
-    this.sketchIt();
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
+    window.addEventListener('load', () => {
+      console.log('page is fully loaded');
+      this.sketchIt();
+      this.createKeys();
+    });
     this.$parent.$on('stop', this.stop);
     this.initializePianoSamples();
   },
@@ -54,6 +57,7 @@ export default {
     red() { return [245, 22, 22]; },
     darkRed() { return [128, 38, 38]; },
     blue() { return [3, 132, 252]; },
+    gray() { return [138, 138, 138]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
     keyOffLocation() { return this.height + this.bpm2px; },
     rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
@@ -158,7 +162,7 @@ export default {
       for (let i = this.notes.length - 1; i >= 0; i -= 1) {
         const note = this.notes[i];
         // coloring
-        this.sketch.fill([138, 138, 138]);
+        this.sketch.fill(this.gray);
         if (this.leftHandEnabled && note.hand === 'left') this.sketch.fill(note.color);
         if (this.rightHandEnabled && note.hand === 'right') this.sketch.fill(note.color);
         note.show();
@@ -174,6 +178,8 @@ export default {
           }
         }
 
+        if (note.isOpen) note.showEffect(this.position);
+
         if (note.isNoteEnd()) {
           note.isOpen = false;
           this.notes.splice(i, 1);
@@ -185,7 +191,6 @@ export default {
 
     noteOn(note) {
       console.log('Note ON: ', note);
-
       this.piano.keyDown({ midi: note.number });
       this.pressKeyComponent(note.octave, note.name);
     },
@@ -250,6 +255,7 @@ export default {
             write: () => this.sketch.text(y, x, y + 30),
             isNoteStart: () => this.height <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
+            showEffect: this.sketch.effectGenerator(x, 5),
           });
         });
         this.cachedNotes = _.cloneDeep(this.notes);
@@ -292,6 +298,21 @@ export default {
 
     sketchIt() {
       const sketch = (s) => {
+        s.effectGenerator = (x, pace) => {
+          let i = 0;
+          const { keyWidth } = this;
+          const { height } = this;
+          const { gray } = this;
+          return (position) => {
+            if (i > keyWidth) i = 0;
+            s.rectMode(s.CORNERS);
+            s.fill(gray);
+            s.rect(x + i, 0 - position, x - i, height - position);
+            s.rectMode(s.CORNER);
+            i += pace;
+          };
+        };
+
         s.setup = () => {
           s.createCanvas(this.width, this.height);
         };
