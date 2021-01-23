@@ -57,6 +57,7 @@ export default {
     red() { return [245, 22, 22]; },
     darkRed() { return [128, 38, 38]; },
     blue() { return [3, 132, 252]; },
+    darkBlue() { return [59, 96, 133]; },
     gray() { return [138, 138, 138]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
     keyOffLocation() { return this.height + this.bpm2px; },
@@ -170,6 +171,7 @@ export default {
         if (note.isNoteStart() && !note.isOpen) {
           console.log('fill with ');
           note.color = [59, 96, 133];
+          note.color = this.darkBlue;
           if (this.leftHandEnabled && note.hand === 'left') {
             this.pickMode(note, i);
           }
@@ -255,7 +257,7 @@ export default {
             write: () => this.sketch.text(y, x, y + 30),
             isNoteStart: () => this.height <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
-            showEffect: this.sketch.effectGenerator(x, 5),
+            showEffect: this.sketch.effectGenerator(x + this.keyWidth / 2, 5),
           });
         });
         this.cachedNotes = _.cloneDeep(this.notes);
