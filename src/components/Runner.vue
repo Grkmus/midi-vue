@@ -224,6 +224,7 @@ export default {
       this.piano.stopAll();
       this.notes.forEach((note) => {
         note.isOpen = false;
+        note.color = this.pickColor(note.hand, note.name);
       });
       this.$root.$emit('reset');
     },
@@ -255,12 +256,13 @@ export default {
           const adjustedStart = -ticks * this.divisionRate;
           const offset = this.getOffset(note);
           const [x, y, w, h] = [((midi - this.lowestKey) * this.keyWidth) + offset, adjustedStart, this.keyWidth, adjustedHeight];
+          const hand = index === 1 ? 'left' : 'right';
           this.notes.push({
-            hand: index === 1 ? 'left' : 'right',
+            hand,
             number: midi,
             octave,
             name: pitch,
-            color: this.pickColor(index, note),
+            color: this.pickColor(hand, pitch),
             velocity: 0,
             isOpen: false,
             position: y,
@@ -290,13 +292,13 @@ export default {
       return _.get(offsets, note.pitch, 0);
     },
 
-    pickColor(index, note) {
+    pickColor(hand, noteName) {
       const colorOptions = {
         // for each option: [condition, result]
-        rightHandSharp: [index === 0 && note.name.includes('#'), this.darkRed],
-        leftHandSharp: [index === 1 && note.name.includes('#'), this.darkGreen],
-        rightHand: [index === 0, this.red],
-        leftHand: [index === 1, this.green],
+        rightHandSharp: [hand === 'right' && noteName.includes('#'), this.darkRed],
+        leftHandSharp: [hand === 'left' && noteName.includes('#'), this.darkGreen],
+        rightHand: [hand === 'right', this.red],
+        leftHand: [hand === 'left', this.green],
       };
       return Object.values(colorOptions).find((options) => options[0])[1];
     },
