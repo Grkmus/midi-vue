@@ -31,11 +31,11 @@
         <div class="module">
           <h3 class="panel-header">Player</h3>
           <div class="panel">
-            <font-awesome-icon icon="step-backward" size="2x"/>
+            <font-awesome-icon @click="stepBackward" icon="step-backward" size="2x"/>
             <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x"/>
             <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x"/>
             <font-awesome-icon @click="stop" icon="stop" size="2x"/>
-            <font-awesome-icon icon="step-forward" size="2x"/>
+            <font-awesome-icon @click="stepForward" icon="step-forward" size="2x"/>
           </div>
           <span class="truncate">Current Song: {{ fileName || selectedSong }} </span>
         </div>
@@ -209,6 +209,12 @@ export default {
     stop() {
       this.$emit('stop');
       this.isPlaying = false;
+    },
+    stepForward() {
+      this.$emit('step-forward');
+    },
+    stepBackward() {
+      this.$emit('step-backward');
     },
   },
 };

@@ -6,6 +6,7 @@
 import P5 from 'p5';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
+import MeasureLine from '../models/MeasureLine';
 import ASharpImage from '../assets/A#.png';
 import CSharpImage from '../assets/C#.png';
 import DSharpImage from '../assets/D#.png';
@@ -51,6 +52,7 @@ export default {
       deltaTime: 0,
       keysToBePressed: new Set(),
       bpmScaler: 1,
+      measureLines: [],
     };
   },
   mounted() {
@@ -63,6 +65,12 @@ export default {
     });
     this.$parent.$on('stop', this.stop);
     this.initializePianoSamples();
+    this.$parent.$on('step-forward', () => {
+      this.position += this.oneMeasureHeight;
+    });
+    this.$parent.$on('step-backward', () => {
+      this.position -= this.oneMeasureHeight;
+    });
   },
   computed: {
     green() { return [52, 206, 77]; },
@@ -76,6 +84,7 @@ export default {
     keyOffLocation() { return this.height + this.bpm2px; },
     rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
+    oneMeasureHeight() { return (this.standardQuarterNoteHeight * 4) / this.divisionRate; },
     minimumMeasure() { return Math.ceil(_.minBy(this.rawAllNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
     scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
     startTick() { return _.minBy(this.rawAllNotes, (note) => note.ticks).ticks; },
@@ -169,6 +178,20 @@ export default {
         this.$set(this.notes, i, note);
         this.noteOn(note, i);
         console.log('note started', note, i);
+      }
+    },
+
+    createMeasureLines() {
+      const measureLineAmount = Math.floor(this.lastTick / this.oneMeasureHeight);
+      for (let i = 0; i < measureLineAmount; i += 1) {
+        this.measureLines.push(new MeasureLine(this.sketch, this.width, i * this.oneMeasureHeight));
+      }
+    },
+
+    drawMeasures() {
+      for (let i = this.measureLines.length - 1; i >= 0; i -= 1) {
+        const measureLine = this.measureLines[i];
+        measureLine.show(this.position);
       }
     },
 
@@ -275,6 +298,7 @@ export default {
         });
         this.cachedNotes = _.cloneDeep(this.notes);
       });
+      this.createMeasureLines();
     },
 
     getOffset(note) {
@@ -329,21 +353,16 @@ export default {
         };
         const loadedImages = {};
         s.preload = () => {
-          console.log('Loading images', loadedImages);
+          console.log('Loading images');
           Object.entries(images).forEach(([key, value]) => {
             loadedImages[key] = s.loadImage(value);
           });
-          console.log('Images Loaded!', loadedImages);
-          console.log('normal images', images);
+          console.log('Images Loaded!');
         };
 
-        s.imagePicker = (imageName, x, y) => {
-          console.log('setting the image picker function for', imageName);
-          return () => {
-            const image = _.get(loadedImages, imageName);
-            // console.log(imageName, image, loadedImages);
-            s.image(image, x, y - 30);
-          };
+        s.imagePicker = (imageName, x, y) => () => {
+          const image = _.get(loadedImages, imageName);
+          s.image(image, x, y - 30);
         };
 
         s.effectGenerator = (x, pace) => {
@@ -374,6 +393,7 @@ export default {
             this.deltaTime = s.deltaTime;
             this.position += this.positionAdder;
           }
+          this.drawMeasures();
           s.textSize(32);
           s.fill(255);
           s.text(Math.round(this.position) - this.height, 30, 60 - this.position);
