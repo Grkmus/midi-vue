@@ -65,6 +65,12 @@ export default {
     });
     this.$parent.$on('stop', this.stop);
     this.initializePianoSamples();
+    this.$parent.$on('step-forward', () => {
+      this.position += this.oneMeasureHeight;
+    });
+    this.$parent.$on('step-backward', () => {
+      this.position -= this.oneMeasureHeight;
+    });
   },
   computed: {
     green() { return [52, 206, 77]; },
