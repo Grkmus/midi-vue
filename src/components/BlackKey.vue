@@ -24,7 +24,6 @@ export default {
       this.currentVelocity = velocity;
     },
     releaseKey() {
-      console.log('we are in the black key');
       this.currentVelocity = 0;
     },
   },

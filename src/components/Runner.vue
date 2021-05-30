@@ -3,22 +3,23 @@
 </template>
 
 <script>
-import P5 from 'p5';
+// import P5 from 'p5';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
+import sketch from './Sketch';
 import MeasureLine from '../models/MeasureLine';
-import ASharpImage from '../assets/A#.png';
-import CSharpImage from '../assets/C#.png';
-import DSharpImage from '../assets/D#.png';
-import FSharpImage from '../assets/F#.png';
-import GSharpImage from '../assets/G#.png';
-import AImage from '../assets/A.png';
-import BImage from '../assets/B.png';
-import CImage from '../assets/C.png';
-import DImage from '../assets/D.png';
-import EImage from '../assets/E.png';
-import FImage from '../assets/F.png';
-import GImage from '../assets/G.png';
+// import ASharpImage from '../assets/A#.png';
+// import CSharpImage from '../assets/C#.png';
+// import DSharpImage from '../assets/D#.png';
+// import FSharpImage from '../assets/F#.png';
+// import GSharpImage from '../assets/G#.png';
+// import AImage from '../assets/A.png';
+// import BImage from '../assets/B.png';
+// import CImage from '../assets/C.png';
+// import DImage from '../assets/D.png';
+// import EImage from '../assets/E.png';
+// import FImage from '../assets/F.png';
+// import GImage from '../assets/G.png';
 
 export default {
   name: 'Runner',
@@ -59,12 +60,11 @@ export default {
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
     window.addEventListener('load', () => {
-      console.log('page is fully loaded');
-      this.sketchIt();
+      console.log('page is fully loaded', this.midiJson);
       this.createKeys();
     });
     this.$parent.$on('stop', this.stop);
-    this.initializePianoSamples();
+    // this.initializePianoSamples();
     this.$parent.$on('step-forward', () => {
       this.position += this.oneMeasureHeight;
     });
@@ -81,15 +81,11 @@ export default {
     darkBlue() { return [59, 96, 133]; },
     gray() { return [138, 138, 138]; },
     keyTriggerLocation() { return this.height - this.bpm2px; },
-    keyOffLocation() { return this.height + this.bpm2px; },
     rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
     oneMeasureHeight() { return (this.standardQuarterNoteHeight * 4) / this.divisionRate; },
     minimumMeasure() { return Math.ceil(_.minBy(this.rawAllNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
-    scaledMinMeasure() { return this.minimumMeasure * this.divisionRate; },
-    startTick() { return _.minBy(this.rawAllNotes, (note) => note.ticks).ticks; },
     lastTick() { return _.maxBy(this.rawAllNotes, (note) => note.ticks).ticks; },
-    availableKeys() { return new Set(this.rawAllNotes.map((note) => note.midi)); },
     divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
     bpm2px() { return (this.bpm * 4) / (1000 / this.deltaTime); },
     positionAdder() { return this.bpm2px * this.bpmScaler; },
@@ -153,7 +149,7 @@ export default {
     initializePianoSamples() {
       this.piano = new Piano({ velocities: 2 });
       this.piano.toDestination();
-      this.piano.output.gain.value = 0.5;
+      this.piano.output.gain.value = 0.1;
       this.piano.load().then(() => {
         console.log('loaded!');
       });
@@ -205,7 +201,6 @@ export default {
         note.show();
         if (this.showNoteText) note.write();
         if (note.isNoteStart() && !note.isOpen) {
-          console.log('fill with ');
           note.color = this.darkBlue;
           if (this.leftHandEnabled && note.hand === 'left') {
             this.pickMode(note, i);
@@ -226,13 +221,13 @@ export default {
     },
 
     noteOn(note) {
-      console.log('Note ON: ', note);
+      // console.log('Note ON: ', note);
       this.piano.keyDown({ midi: note.number });
       this.pressKeyComponent(note.octave, note.name);
     },
 
     noteOff(note) {
-      console.log('Note OFF: ', note);
+      // console.log('Note OFF: ', note);
       this.piano.keyUp({ midi: note.number });
       this.releaseKeyComponent(note.octave, note.name);
     },
@@ -336,71 +331,72 @@ export default {
     },
 
     sketchIt() {
-      const sketch = (s) => {
-        const images = {
-          'A#': ASharpImage,
-          'C#': CSharpImage,
-          'D#': DSharpImage,
-          'F#': FSharpImage,
-          'G#': GSharpImage,
-          A: AImage,
-          B: BImage,
-          C: CImage,
-          D: DImage,
-          E: EImage,
-          F: FImage,
-          G: GImage,
-        };
-        const loadedImages = {};
-        s.preload = () => {
-          console.log('Loading images');
-          Object.entries(images).forEach(([key, value]) => {
-            loadedImages[key] = s.loadImage(value);
-          });
-          console.log('Images Loaded!');
-        };
+      sketch('canvas', this.width, this.height);
+      // const sketch = (s) => {
+      //   const images = {
+      //     'A#': ASharpImage,
+      //     'C#': CSharpImage,
+      //     'D#': DSharpImage,
+      //     'F#': FSharpImage,
+      //     'G#': GSharpImage,
+      //     A: AImage,
+      //     B: BImage,
+      //     C: CImage,
+      //     D: DImage,
+      //     E: EImage,
+      //     F: FImage,
+      //     G: GImage,
+      //   };
+      //   const loadedImages = {};
+      //   s.preload = () => {
+      //     console.log('Loading images');
+      //     Object.entries(images).forEach(([key, value]) => {
+      //       loadedImages[key] = s.loadImage(value);
+      //     });
+      //     console.log('Images Loaded!');
+      //   };
 
-        s.imagePicker = (imageName, x, y) => () => {
-          const image = _.get(loadedImages, imageName);
-          s.image(image, x, y - 30);
-        };
+      //   s.imagePicker = (imageName, x, y) => () => {
+      //     const image = _.get(loadedImages, imageName);
+      //     s.image(image, x, y - 30);
+      //   };
 
-        s.effectGenerator = (x, pace) => {
-          let i = 0;
-          const { keyWidth } = this;
-          const { height } = this;
-          const { darkBlue } = this;
-          return (position) => {
-            if (i < keyWidth - 10) {
-              s.rectMode(s.CORNERS);
-              s.fill(...darkBlue, 100);
-              s.rect(x + i, 0 - position, x - i, height - position);
-              s.rectMode(s.CORNER);
-              i += pace;
-            }
-          };
-        };
+      //   s.effectGenerator = (x, pace) => {
+      //     let i = 0;
+      //     const { keyWidth } = this;
+      //     const { height } = this;
+      //     const { darkBlue } = this;
+      //     return (position) => {
+      //       if (i < keyWidth - 10) {
+      //         s.rectMode(s.CORNERS);
+      //         s.fill(...darkBlue, 100);
+      //         s.rect(x + i, 0 - position, x - i, height - position);
+      //         s.rectMode(s.CORNER);
+      //         i += pace;
+      //       }
+      //     };
+      //   };
 
-        s.setup = () => {
-          s.createCanvas(this.width, this.height);
-        };
-        s.draw = () => {
-          s.background(33, 33, 33);
-          s.translate(0, this.position);
-          if (this.loopEnabled) this.loopInArea();
-          this.drawNotes(s);
-          if (this.isPlaying) {
-            this.deltaTime = s.deltaTime;
-            this.position += this.positionAdder;
-          }
-          this.drawMeasures();
-          s.textSize(32);
-          s.fill(255);
-          s.text(Math.round(this.position) - this.height, 30, 60 - this.position);
-        };
-        this.sketch = s;
-      };
-      new P5(sketch, 'canvas');
+      //   s.setup = () => {
+      //     s.createCanvas(this.width, this.height);
+      //   };
+      //   s.draw = () => {
+      //     s.background(33, 33, 33);
+      //     s.translate(0, this.position);
+      //     if (this.loopEnabled) this.loopInArea();
+      //     this.drawNotes(s);
+      //     if (this.isPlaying) {
+      //       this.deltaTime = s.deltaTime;
+      //       this.position += this.positionAdder;
+      //     }
+      //     this.drawMeasures();
+      //     s.textSize(32);
+      //     s.fill(255);
+      //     s.text(Math.round(this.position) - this.height, 30, 60 - this.position);
+      //   };
+      //   this.sketch = s;
+      // };
+      // new P5(sketch, 'canvas');
     },
   },
 };

@@ -31,11 +31,11 @@
         <div class="module">
           <h3 class="panel-header">Player</h3>
           <div class="panel">
-            <font-awesome-icon @click="stepBackward" icon="step-backward" size="2x"/>
-            <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" size="2x"/>
-            <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x"/>
-            <font-awesome-icon @click="stop" icon="stop" size="2x"/>
-            <font-awesome-icon @click="stepForward" icon="step-forward" size="2x"/>
+            <font-awesome-icon @click="stepBackward" icon="step-backward" id="step-backward" size="2x"/>
+            <font-awesome-icon v-if="isPlaying" @click="isPlaying=false" icon="pause" id="pause" size="2x"/>
+            <font-awesome-icon v-else @click="isPlaying=true" icon="play" size="2x" id="play"/>
+            <font-awesome-icon @click="stop" icon="stop" id="stop" size="2x"/>
+            <font-awesome-icon @click="stepForward" id="step-forward" icon="step-forward" size="2x"/>
           </div>
           <span class="truncate">Current Song: {{ fileName || selectedSong }} </span>
         </div>
@@ -57,8 +57,8 @@
         <div class="module">
           <h3 class="panel-header">Tempo</h3>
           <div class="panel">
-            <label for="volume">{{bpm}}bpm</label>
-            <input v-model="rawBpm" type="range" id="volume" name="volume" min="1" max="240" step="1">
+            <label for="tempo">{{bpm}}bpm</label>
+            <input v-model="rawBpm" type="range" id="tempo" name="tempo" min="1" max="240" step="1">
           </div>
         </div>
         <div class="module">
@@ -110,6 +110,7 @@ import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
 import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
+import sketch from './components/Sketch';
 
 export default {
   name: 'App',
@@ -166,7 +167,8 @@ export default {
     });
     this.reader.addEventListener('loadend', () => {
       console.log('Loaded midi file: ', this.midiJson);
-      this.$refs.runner.parseMidi();
+      sketch('canvas', this.midiJson);
+      // this.$refs.runner.parseMidi();
     });
     fetch(`${this.publicPath}MozartWolfgangAmadeus_AllaTurcaRondo.midi`).then((res) => res.blob()).then((res) => {
       this.reader.readAsArrayBuffer(res);
@@ -181,6 +183,7 @@ export default {
       this.reader.readAsArrayBuffer(this.predefinedSongs.find((song) => song.name === newVal).blob);
       this.$refs.filereader.value = '';
       this.rawFileName = '';
+      sketch('canvas', this.midiJson);
     },
 
     mode(newValue) {
