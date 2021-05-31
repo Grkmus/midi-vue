@@ -110,7 +110,7 @@ import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
 import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
-import sketch from './components/Sketch';
+import sketchIt from './components/Sketch';
 
 export default {
   name: 'App',
@@ -167,7 +167,7 @@ export default {
     });
     this.reader.addEventListener('loadend', () => {
       console.log('Loaded midi file: ', this.midiJson);
-      sketch('canvas', this.midiJson);
+      sketchIt('canvas', this.midiJson);
       // this.$refs.runner.parseMidi();
     });
     fetch(`${this.publicPath}MozartWolfgangAmadeus_AllaTurcaRondo.midi`).then((res) => res.blob()).then((res) => {
@@ -183,7 +183,7 @@ export default {
       this.reader.readAsArrayBuffer(this.predefinedSongs.find((song) => song.name === newVal).blob);
       this.$refs.filereader.value = '';
       this.rawFileName = '';
-      sketch('canvas', this.midiJson);
+      sketchIt('canvas', this.midiJson);
     },
 
     mode(newValue) {
