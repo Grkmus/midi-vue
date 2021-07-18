@@ -19,6 +19,7 @@
     "midi-parser-js": "^4.0.4",
     "midi-player-js": "^2.0.13",
     "p5": "^1.1.9",
+    "pug-plain-loader": "^1.1.0",
     "tone": "^14.7.58",
     "vue": "^2.6.12",
     "webmidi": "^2.5.1"
@@ -32,6 +33,7 @@
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-vue": "^7.1.0",
+    "vue-cli-plugin-pug": "~2.0.0",
     "vue-template-compiler": "^2.6.11"
   },
   "main": ".eslintrc.js",

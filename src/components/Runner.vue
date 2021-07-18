@@ -1,5 +1,5 @@
-<template>
-  <div id="canvas"></div>
+<template lang="pug">
+#canvas
 </template>
 
 <script>

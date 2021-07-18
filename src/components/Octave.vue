@@ -1,22 +1,19 @@
-<template>
-  <div :style="{width: `${octaveWidth}px`}" class="octave">
-    <div class="white-keys">
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" ref="C"  key="C" note="C"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="D"  key="D" note="D"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" ref="E"  key="E" note="E"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" ref="F"  key="F" note="F"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="G"  key="G" note="G"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}"          ref="A"  key="A" note="A"></white-key>
-      <white-key :style="{ width: `${whiteKeyWidth}px`}" ref="B"  key="B" note="B"></white-key>
-    </div>
-    <div class="black-keys">
-      <black-key :style="{ width: `${keyWidth}px`, left:`${2 + keyWidth}px`}"      ref="C#" key="C#" note="C#"></black-key>
-      <black-key :style="{ width: `${keyWidth}px`, left:`${4 + keyWidth * 3}px`}"  ref="D#" key="D#" note="D#"></black-key>
-      <black-key :style="{ width: `${keyWidth}px`, left:`${6 + keyWidth* 6}px`}"   ref="F#" key="F#" note="F#"></black-key>
-      <black-key :style="{ width: `${keyWidth}px`, left:`${4 + keyWidth * 8}px`}"  ref="G#" key="G#" note="G#"></black-key>
-      <black-key :style="{ width: `${keyWidth}px`, left:`${keyWidth * 10}px`}" ref="A#" key="A#" note="A#"></black-key>
-    </div>
-  </div>
+<template lang="pug">
+.octave(:style='{width: `${octaveWidth}px`}')
+  .white-keys
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='C' key='C' note='C')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='D' key='D' note='D')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='E' key='E' note='E')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='F' key='F' note='F')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='G' key='G' note='G')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='A' key='A' note='A')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='B' key='B' note='B')
+  .black-keys
+    black-key(:style='{ width: `${keyWidth}px`, left:`${2 + keyWidth}px`}' ref='C#' key='C#' note='C#')
+    black-key(:style='{ width: `${keyWidth}px`, left:`${4 + keyWidth * 3}px`}' ref='D#' key='D#' note='D#')
+    black-key(:style='{ width: `${keyWidth}px`, left:`${6 + keyWidth* 6}px`}' ref='F#' key='F#' note='F#')
+    black-key(:style='{ width: `${keyWidth}px`, left:`${4 + keyWidth * 8}px`}' ref='G#' key='G#' note='G#')
+    black-key(:style='{ width: `${keyWidth}px`, left:`${keyWidth * 10}px`}' ref='A#' key='A#' note='A#')
 </template>
 
 <script>

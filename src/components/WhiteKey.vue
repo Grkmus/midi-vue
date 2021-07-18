@@ -1,7 +1,6 @@
-<template>
-  <div v-bind:class="{ pressed: currentVelocity}" class="white-key" >
-    <span>{{ note }}</span>
-  </div>
+<template lang="pug">
+.white-key(v-bind:class='{ pressed: currentVelocity}')
+  span {{ note }}
 </template>
 
 <script>
