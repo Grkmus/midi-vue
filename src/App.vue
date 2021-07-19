@@ -115,7 +115,6 @@ export default {
       isPlaying: false,
       rawBpm: 120,
       mode: 'playAlong',
-      stopClicked: false,
       loopEnabled: false,
       rawLoopStart: 2000,
       rawLoopEnd: 3000,
@@ -127,7 +126,7 @@ export default {
       selectedInput: null,
       availableInputs: null,
       midiDevice: null,
-      showNoteText: true,
+      showNoteText: false,
     };
   },
 
@@ -194,7 +193,7 @@ export default {
       this.rawFileName = this.$refs.filereader.files[0].name;
     },
     stop() {
-      this.$emit('stop');
+      this.$refs.runner.stop();
       this.isPlaying = false;
     },
   },
