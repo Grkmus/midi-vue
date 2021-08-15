@@ -4,6 +4,8 @@
 </template>
 
 <script>
+import piano from '../models/Piano';
+
 export default {
   name: 'WhiteKey',
   props: {
@@ -19,11 +21,13 @@ export default {
     this.$root.$on('reset', this.releaseKey);
   },
   methods: {
-    pressKey(velocity) {
+    pressKey(velocity, midiNumber) {
+      piano.keyDown({ midi: midiNumber });
       this.currentVelocity = velocity;
     },
-    releaseKey() {
+    releaseKey(midiNumber) {
       this.currentVelocity = 0;
+      piano.keyUp({ midi: midiNumber });
     },
   },
 };

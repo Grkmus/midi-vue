@@ -4,8 +4,9 @@
 
 <script>
 import P5 from 'p5';
-import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
+import Note from '../models/Note';
+import getSettings from '../utils/settings';
 
 export default {
   name: 'Runner',
@@ -27,6 +28,8 @@ export default {
   data() {
     this.cachedNotes = null;
     return {
+      stage: [],
+      notesGrouped: null,
       keys: {},
       lowestKey: 24,
       isKeyPressed: false,
@@ -45,25 +48,14 @@ export default {
     document.addEventListener('keyup', this.keyUp);
     window.addEventListener('load', () => {
       console.log('page is fully loaded');
+      console.log(getSettings());
       this.sketchIt();
       this.createKeys();
     });
     this.$parent.$on('stop', this.stop);
-    this.initializePianoSamples();
   },
   computed: {
-    green() { return [52, 206, 77]; },
-    darkGreen() { return [50, 117, 61]; },
-    red() { return [245, 22, 22]; },
-    darkRed() { return [128, 38, 38]; },
-    blue() { return [3, 132, 252]; },
-    darkBlue() { return [59, 96, 133]; },
-    gray() { return [138, 138, 138]; },
-    keyTriggerLocation() { return this.height - this.bpm2px; },
-    rawAllNotes() { return _.flatMapDeep(this.midiJson?.tracks, (track) => [track.notes]); },
     // need to round up the minimum measure as it should be multiple of 20 which means 1/16 note
-    minimumMeasure() { return Math.ceil(_.minBy(this.rawAllNotes, (note) => note?.durationTicks)?.durationTicks / 20) * 20; },
-    divisionRate() { return this.standardQuarterNoteHeight / this.midiJson?.header.ppq; },
     bpm2px() { return (this.bpm * 4) / (1000 / this.deltaTime); },
     positionAdder() { return this.bpm2px * this.bpmScaler; },
   },
@@ -123,76 +115,10 @@ export default {
   },
   methods: {
 
-    initializePianoSamples() {
-      this.piano = new Piano({ velocities: 2 });
-      this.piano.toDestination();
-      this.piano.output.gain.value = 0.5;
-      this.piano.load().then(() => {
-        console.log('loaded!');
-      });
-    },
-
     createKeys() {
       for (let i = this.lowestKey; i < 108; i += 1) {
         this.$set(this.keys, i, false);
       }
-    },
-
-    pickMode(note, i) {
-      if (this.mode === 'waitInput') {
-        note.isOpen = true;
-        this.keysToBePressed.add(note.number);
-        console.log(this.keysToBePressed);
-        this.pressKeyComponent(note.octave, note.name);
-        this.$emit('pause');
-      }
-      if (this.mode === 'playAlong') {
-        note.isOpen = true;
-        this.$set(this.notes, i, note);
-        this.noteOn(note, i);
-        console.log('note started', note, i);
-      }
-    },
-
-    drawNotes() {
-      for (let i = this.notes.length - 1; i >= 0; i -= 1) {
-        const note = this.notes[i];
-        // coloring
-        this.sketch.fill(this.gray);
-        if (this.leftHandEnabled && note.hand === 'left') this.sketch.fill(note.color);
-        if (this.rightHandEnabled && note.hand === 'right') this.sketch.fill(note.color);
-        note.show();
-        if (note.isNoteStart() && !note.isOpen) {
-          console.log('fill with ');
-          note.color = this.darkBlue;
-          if (this.leftHandEnabled && note.hand === 'left') {
-            this.pickMode(note, i);
-          }
-          if (this.rightHandEnabled && note.hand === 'right') {
-            this.pickMode(note, i);
-          }
-        }
-        if (note.isOpen) note.showEffect(this.position);
-
-        if (note.isNoteEnd()) {
-          note.isOpen = false;
-          this.notes.splice(i, 1);
-          this.noteOff(note, i);
-          console.log('note ended', note, i);
-        }
-      }
-    },
-
-    noteOn(note) {
-      console.log('Note ON: ', note);
-      this.piano.keyDown({ midi: note.number });
-      this.pressKeyComponent(note.octave, note.name);
-    },
-
-    noteOff(note) {
-      console.log('Note OFF: ', note);
-      this.piano.keyUp({ midi: note.number });
-      this.releaseKeyComponent(note.octave, note.name);
     },
 
     stop() {
@@ -223,78 +149,32 @@ export default {
     },
 
     parseMidi() {
-      this.position = 0;
-      this.$set(this, 'notes', []); // in case the user chose a new file while a song is playing
-      this.resetNoteState();
-      this.midiJson.tracks.forEach((track, index) => {
-        console.log('parsing tracks..');
-        track.notes.forEach((note) => {
-          console.log('parsing notes..');
-          const {
-            midi, durationTicks, ticks, octave, pitch,
-          } = note;
-          const adjustedHeight = -durationTicks * this.divisionRate;
-          const adjustedStart = -ticks * this.divisionRate;
-          const offset = this.getOffset(note);
-          const [x, y, w, h] = [((midi - this.lowestKey) * this.keyWidth) + offset, adjustedStart, this.keyWidth, adjustedHeight];
-          const hand = index === 1 ? 'left' : 'right';
-          this.notes.push({
-            hand,
-            number: midi,
-            octave,
-            name: pitch,
-            color: this.pickColor(hand, pitch),
-            velocity: 0,
-            isOpen: false,
-            position: y,
-            show: () => this.sketch.rect(x, y, w, h, 5),
-            write: this.sketch.imagePicker(pitch, x, y),
-            isNoteStart: () => this.height <= y + this.position,
-            isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
-            showEffect: this.sketch.effectGenerator(x + this.keyWidth / 2, 5),
-          });
+      console.log('PARSING THE MIDI FILE...');
+      this.midiJson.tracks.forEach((track, trackIndex) => {
+        track.notes.forEach((note, noteIndex) => {
+          this.notes.push(
+            new Note(note, noteIndex, trackIndex, this.height, this.pressKeyComponent, this.releaseKeyComponent),
+          );
+          this.notesGrouped = _.groupBy(this.notes, (note) => Math.floor(-note.y / this.height)); // eslint-disable-line
         });
-        this.cachedNotes = _.cloneDeep(this.notes);
       });
+      this.stage.push(...Object.values(this.notesGrouped).slice(0, 2));
+      console.log(this.notesGrouped);
+      this.cachedNotes = _.cloneDeep(this.notesGrouped);
     },
 
-    getOffset(note) {
-      const offsets = {
-        'C#': 2,
-        'D#': 4,
-        'F#': 6,
-        'G#': 4,
-        G: 5,
-        A: 3,
-        E: 3,
-        F: 5,
-        D: 5,
-      };
-      return _.get(offsets, note.pitch, 0);
+    pressKeyComponent(octave, pitch, midiNumber) {
+      console.log('press key', octave, pitch);
+      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55, midiNumber);
     },
 
-    pickColor(hand, noteName) {
-      const colorOptions = {
-        // for each option: [condition, result]
-        rightHandSharp: [hand === 'right' && noteName.includes('#'), this.darkRed],
-        leftHandSharp: [hand === 'left' && noteName.includes('#'), this.darkGreen],
-        rightHand: [hand === 'right', this.red],
-        leftHand: [hand === 'left', this.green],
-      };
-      return Object.values(colorOptions).find((options) => options[0])[1];
-    },
-
-    pressKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave][0].$refs[pitch].pressKey(55);
-    },
-
-    releaseKeyComponent(octave, pitch) {
-      this.$parent.$refs[octave][0].$refs[pitch].releaseKey();
+    releaseKeyComponent(octave, pitch, midiNumber) {
+      console.log('release key');
+      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey(midiNumber);
     },
 
     sketchIt() {
       const sketch = (s) => {
-
         s.effectGenerator = (x, pace) => {
           let i = 0;
           const { keyWidth } = this;
@@ -317,17 +197,29 @@ export default {
         s.draw = () => {
           s.background(33, 33, 33);
           s.translate(0, this.position);
-          if (this.loopEnabled) this.loopInArea();
-          this.drawNotes(s);
+          this.stage.forEach((group, index) => {
+            for (let i = group.length - 1; i >= 0; i -= 1) {
+              const note = group[i];
+              note.update(this.position);
+              if (note.isPlayed) group.splice(i, 1);
+              if (group.length === 0) {
+                console.log('this group is finished', index);
+                console.log('retrieving next group', index + 2);
+                this.stage.push(this.notesGrouped[index + 2]);
+              }
+            }
+          });
+          s.text(this.stage.flat().length, 30, 30 - this.position);
+          s.text(this.position, 30, 60 - this.position);
           if (this.isPlaying) {
             this.deltaTime = s.deltaTime;
             this.position += this.positionAdder;
           }
-          s.textSize(32);
-          s.fill(255);
-          s.text(Math.round(this.position) - this.height, 30, 60 - this.position);
         };
         this.sketch = s;
+        Note.prototype.sketch = s;
+        Note.prototype.settings = getSettings();
+        console.log(Note.prototype);
       };
       new P5(sketch, 'canvas');
     },
