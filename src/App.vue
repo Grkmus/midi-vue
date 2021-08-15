@@ -1,95 +1,95 @@
 <template lang="pug">
-  #app
-    #player
-      #about
-        h1(:style="{'margin-top': '0px'}")
-          a(href='/') Play Piano Online
-        label About The Author
-        #icon-container
-          a(target='_blank' href='https://github.com/Grkmus')
-            font-awesome-icon(:icon="['fab', 'github']" size='2x')
-          a(target='_blank' href='https://twitter.com/tosungo')
-            font-awesome-icon(:icon="['fab', 'twitter']" size='2x')
-          a(target='_blank' href='https://www.instagram.com/tosungo/')
-            font-awesome-icon(:icon="['fab', 'instagram']" size='2x')
-          a(target='_blank' href='https://gorkemtosun.com/')
-            font-awesome-icon(:icon="['fa', 'globe']" size='2x')
-      #player-options
-        .module
-          h3.panel-header Song
-          .panel
-            .container
-              label(for='filereader')  Chose a midi file
-              input#filereader(@change='readFile' type='file' name='filereader' ref='filereader' style='width: 140px')
-            .container
-              label(for='songs') Or pick a predefined song:
-              select#songs(v-model='selectedSong' name='songs')
-                option(label='Canon in D' value='Canon in D')
-                option(label='Mozart - Rondo Alla Turca' value='Mozart - Rondo Alla Turca')
-        .module
-          h3.panel-header Player
-          .panel
-            font-awesome-icon(icon='step-backward' size='2x')
-            font-awesome-icon(v-if='isPlaying' @click='isPlaying=false' icon='pause' size='2x')
-            font-awesome-icon(v-else='' @click='isPlaying=true' icon='play' size='2x')
-            font-awesome-icon(@click='stop' icon='stop' size='2x')
-            font-awesome-icon(icon='step-forward' size='2x')
-          span.truncate Current Song: {{ fileName || selectedSong }}
-        .module
-          h3.panel-header Mods
-          .panel
-            label(for='play-along') Play along
-            input#play-along(type='radio' name='mode' value='playAlong' v-model='mode')
-            label(for='wait-input') Wait for input
-            input#wait-input(type='radio' name='mode' value='waitInput' v-model='mode')
-            label(for='left-hand') Left Hand
-            input#left-hand(type='checkbox' name='left-hand' value='leftHand' v-model='leftHandEnabled')
-            label(for='right-hand') Right Hand
-            input#right-hand(type='checkbox' name='left-hand' value='rightHand' v-model='rightHandEnabled')
-            label(for='right-hand') Show Note Text
-            input#show-text(type='checkbox' name='show-text' v-model='showNoteText')
-        .module
-          h3.panel-header Tempo
-          .panel
-            label(for='volume') {{bpm}}bpm
-            input#tempo(v-model='rawBpm' type='range' name='tempo' min='1' max='240' step='1')
-        .module
-          h3.panel-header Looping
-          .panel
-            input#looping(v-model='loopEnabled' type='checkbox' name='looping' min='1' max='240' step='1')
-            input#loop-start(v-model='rawLoopStart' type='number' name='loop-start' step='1000' :disabled='!loopEnabled' style='width: 50px')
-            input#loop-end(v-model='rawLoopEnd' type='number' name='loop-end' step='1000' :disabled='!loopEnabled' style='width: 50px')
-        .module
-          h3.panel-header Midi Input
-          .panel
-            select#songs(v-model='selectedInput' name='songs')
-              option(:key='input' v-html='input' :value='input' v-for='input in availableInputs')
-    #sheet
-      runner(
-        ref='runner'
-        :midiJson='midiJson'
-        :height='sheetHeight'
-        :width='sheetWidth'
-        :keyWidth='keyWidth'
-        :isPlaying='isPlaying'
-        :bpm='bpm'
-        :mode='mode'
-        :loopEnabled='loopEnabled'
-        :loopStart='loopStart'
-        :loopEnd='loopEnd'
-        :leftHandEnabled='leftHandEnabled'
-        :rightHandEnabled='rightHandEnabled'
-        @pause='isPlaying = false'
-        :midi-device='midiDevice'
-        :showNoteText='showNoteText')
-    #keyboard
-      octave(
-        v-for='k in octaveAmount'
-        :ref='k'
-        :octaveWidth='octaveWidth'
-        :keyWidth='keyWidth'
-        :key='k'
-      )
+#app
+  #player
+    #about
+      h1(:style="{'margin-top': '0px'}")
+        a(href='/') Play Piano Online
+      label About The Author
+      #icon-container
+        a(target='_blank' href='https://github.com/Grkmus')
+          font-awesome-icon(:icon="['fab', 'github']" size='2x')
+        a(target='_blank' href='https://twitter.com/tosungo')
+          font-awesome-icon(:icon="['fab', 'twitter']" size='2x')
+        a(target='_blank' href='https://www.instagram.com/tosungo/')
+          font-awesome-icon(:icon="['fab', 'instagram']" size='2x')
+        a(target='_blank' href='https://gorkemtosun.com/')
+          font-awesome-icon(:icon="['fa', 'globe']" size='2x')
+    #player-options
+      .module
+        h3.panel-header Song
+        .panel
+          .container
+            label(for='filereader')  Chose a midi file
+            input#filereader(@change='readFile' type='file' name='filereader' ref='filereader' style='width: 140px')
+          .container
+            label(for='songs') Or pick a predefined song:
+            select#songs(v-model='selectedSong' name='songs')
+              option(label='Canon in D' value='Canon in D')
+              option(label='Mozart - Rondo Alla Turca' value='Mozart - Rondo Alla Turca')
+      .module
+        h3.panel-header Player
+        .panel
+          font-awesome-icon(icon='step-backward' size='2x')
+          font-awesome-icon(v-if='isPlaying' @click='isPlaying=false' icon='pause' size='2x')
+          font-awesome-icon(v-else='' @click='isPlaying=true' icon='play' size='2x')
+          font-awesome-icon(@click='stop' icon='stop' size='2x')
+          font-awesome-icon(icon='step-forward' size='2x')
+        span.truncate Current Song: {{ fileName || selectedSong }}
+      .module
+        h3.panel-header Mods
+        .panel
+          label(for='play-along') Play along
+          input#play-along(type='radio' name='mode' value='playAlong' v-model='mode')
+          label(for='wait-input') Wait for input
+          input#wait-input(type='radio' name='mode' value='waitInput' v-model='mode')
+          label(for='left-hand') Left Hand
+          input#left-hand(type='checkbox' name='left-hand' value='leftHand' v-model='leftHandEnabled')
+          label(for='right-hand') Right Hand
+          input#right-hand(type='checkbox' name='left-hand' value='rightHand' v-model='rightHandEnabled')
+          label(for='right-hand') Show Note Text
+          input#show-text(type='checkbox' name='show-text' v-model='showNoteText')
+      .module
+        h3.panel-header Tempo
+        .panel
+          label(for='volume') {{bpm}}bpm
+          input#tempo(v-model='rawBpm' type='range' name='tempo' min='1' max='240' step='1')
+      .module
+        h3.panel-header Looping
+        .panel
+          input#looping(v-model='loopEnabled' type='checkbox' name='looping' min='1' max='240' step='1')
+          input#loop-start(v-model='rawLoopStart' type='number' name='loop-start' step='1000' :disabled='!loopEnabled' style='width: 50px')
+          input#loop-end(v-model='rawLoopEnd' type='number' name='loop-end' step='1000' :disabled='!loopEnabled' style='width: 50px')
+      .module
+        h3.panel-header Midi Input
+        .panel
+          select#songs(v-model='selectedInput' name='songs')
+            option(:key='input' v-html='input' :value='input' v-for='input in availableInputs')
+  #sheet
+    runner(
+      ref='runner'
+      :midiJson='midiJson'
+      :height='sheetHeight'
+      :width='sheetWidth'
+      :keyWidth='keyWidth'
+      :isPlaying='isPlaying'
+      :bpm='bpm'
+      :mode='mode'
+      :loopEnabled='loopEnabled'
+      :loopStart='loopStart'
+      :loopEnd='loopEnd'
+      :leftHandEnabled='leftHandEnabled'
+      :rightHandEnabled='rightHandEnabled'
+      @pause='isPlaying = false'
+      :midi-device='midiDevice'
+      :showNoteText='showNoteText')
+  #keyboard
+    octave(
+      v-for='k in octaveAmount'
+      :ref='k'
+      :octaveWidth='octaveWidth'
+      :keyWidth='keyWidth'
+      :key='k'
+    )
 </template>
 
 <script>
