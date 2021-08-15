@@ -46,8 +46,6 @@
           input#left-hand(type='checkbox' name='left-hand' value='leftHand' v-model='leftHandEnabled')
           label(for='right-hand') Right Hand
           input#right-hand(type='checkbox' name='left-hand' value='rightHand' v-model='rightHandEnabled')
-          label(for='right-hand') Show Note Text
-          input#show-text(type='checkbox' name='show-text' v-model='showNoteText')
       .module
         h3.panel-header Tempo
         .panel
@@ -81,7 +79,7 @@
       :rightHandEnabled='rightHandEnabled'
       @pause='isPlaying = false'
       :midi-device='midiDevice'
-      :showNoteText='showNoteText')
+    )
   #keyboard
     octave(
       v-for='k in octaveAmount'
@@ -126,7 +124,6 @@ export default {
       selectedInput: null,
       availableInputs: null,
       midiDevice: null,
-      showNoteText: false,
     };
   },
 
