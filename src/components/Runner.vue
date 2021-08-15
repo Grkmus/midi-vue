@@ -6,18 +6,6 @@
 import P5 from 'p5';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
-import ASharpImage from '../assets/A#.png';
-import CSharpImage from '../assets/C#.png';
-import DSharpImage from '../assets/D#.png';
-import FSharpImage from '../assets/F#.png';
-import GSharpImage from '../assets/G#.png';
-import AImage from '../assets/A.png';
-import BImage from '../assets/B.png';
-import CImage from '../assets/C.png';
-import DImage from '../assets/D.png';
-import EImage from '../assets/E.png';
-import FImage from '../assets/F.png';
-import GImage from '../assets/G.png';
 
 export default {
   name: 'Runner',
@@ -35,7 +23,6 @@ export default {
     leftHandEnabled: Boolean,
     rightHandEnabled: Boolean,
     midiDevice: Object,
-    showNoteText: Boolean,
   },
   data() {
     this.cachedNotes = null;
@@ -175,7 +162,6 @@ export default {
         if (this.leftHandEnabled && note.hand === 'left') this.sketch.fill(note.color);
         if (this.rightHandEnabled && note.hand === 'right') this.sketch.fill(note.color);
         note.show();
-        if (this.showNoteText) note.write();
         if (note.isNoteStart() && !note.isOpen) {
           console.log('fill with ');
           note.color = this.darkBlue;
@@ -308,38 +294,6 @@ export default {
 
     sketchIt() {
       const sketch = (s) => {
-        const images = {
-          'A#': ASharpImage,
-          'C#': CSharpImage,
-          'D#': DSharpImage,
-          'F#': FSharpImage,
-          'G#': GSharpImage,
-          A: AImage,
-          B: BImage,
-          C: CImage,
-          D: DImage,
-          E: EImage,
-          F: FImage,
-          G: GImage,
-        };
-        const loadedImages = {};
-        s.preload = () => {
-          console.log('Loading images', loadedImages);
-          Object.entries(images).forEach(([key, value]) => {
-            loadedImages[key] = s.loadImage(value);
-          });
-          console.log('Images Loaded!', loadedImages);
-          console.log('normal images', images);
-        };
-
-        s.imagePicker = (imageName, x, y) => {
-          console.log('setting the image picker function for', imageName);
-          return () => {
-            const image = _.get(loadedImages, imageName);
-            // console.log(imageName, image, loadedImages);
-            s.image(image, x, y - 30);
-          };
-        };
 
         s.effectGenerator = (x, pace) => {
           let i = 0;
