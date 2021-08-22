@@ -1,7 +1,8 @@
 // /* eslint-disable */
+import { Sprite, Graphics } from 'pixi.js';
 
 const LOWEST_KEY = 24;
-const KEYWIDTH = 22;
+const keyWidth = 30.273809523809522;
 // const STANDART_QUARTER_NOTE_HEIGHT = 1;
 // const OFFSETS = {
 //   'C#': 2,
@@ -16,35 +17,45 @@ const KEYWIDTH = 22;
 // };
 const GRAY_COLOR = [138, 138, 138];
 const WHITE_COLOR = [255];
-
-export default class Note {
-  constructor(note, noeIndex, trackIndex, sheetHeight, noteOnCallBack, noteOffCallBack) {
-    const {
-      midi, durationTicks, ticks, pitch, octave,
-    } = note;
+export default class Note extends Sprite {
+  constructor(note, noteOnCb, noteOffCb) {
+    console.log('creating the note');
+    const { midi, durationTicks, ticks } = note;
+    super();
     this.midiNumber = midi;
-    this.x = (midi - LOWEST_KEY) * KEYWIDTH;
+    this.x = (midi - LOWEST_KEY) * keyWidth;
     this.y = -ticks;
-    this.octave = octave;
-    this.pitch = pitch;
-    this.noteOnCallBack = noteOnCallBack;
-    this.noteOffCallBack = noteOffCallBack;
-    // this.w = w;
-    this.h = -durationTicks;
-    this.color = WHITE_COLOR;
-    this.height = sheetHeight;
-    this.hand = trackIndex === 1 ? 'left' : 'right';
-    this.position = 0;
-    this.isEnabled = true;
+    this.w = keyWidth;
+    this.h = durationTicks;
+    const thing = new Graphics();
+    thing.lineStyle(1, 0xff0000, 1);
+    thing.beginFill(0xffFF00, 0.5);
+    thing.drawRoundedRect(0, 0, this.w, this.h, 10);
+    const texture = app.renderer.generateTexture(thing); //eslint-disable-line
+    this.texture = texture;
+    this.noteOnCb = noteOnCb;
+    this.noteOffCb = noteOffCb;
+    this.isNoteOn = false;
   }
 
-  update(position) {
-    this.position = position;
-    this.handEnableCheck();
-    if (this.noteStartCheck()) this.playNote();
-    if (this.noteStopCheck()) this.stopNote();
-    // this.pickMode()
-    this.draw();
+  update() {
+    if (this.y + this.height >= app.screen.height && !this.isNoteOn) {//eslint-disable-line
+      this.isNoteOn = true;
+      this.noteOnCb(this);
+      this.changeColor();
+    }
+    if (this.y > app.screen.height) {//eslint-disable-line
+      this.noteOffCb(this);
+    }
+  }
+
+  changeColor() {
+    const thing = new Graphics();
+    thing.lineStyle(1, 0xff0000, 1);
+    thing.beginFill(0x2F329F, 0.5);
+    thing.drawRoundedRect(0, 0, this.w, this.h, 10);
+    const texture = app.renderer.generateTexture(thing); //eslint-disable-line
+    this.texture = texture;
   }
 
   handEnableCheck() {

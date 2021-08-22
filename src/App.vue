@@ -62,24 +62,24 @@
         .panel
           select#songs(v-model='selectedInput' name='songs')
             option(:key='input' v-html='input' :value='input' v-for='input in availableInputs')
-  #sheet
-    runner(
-      ref='runner'
-      :midiJson='midiJson'
-      :height='sheetHeight'
-      :width='sheetWidth'
-      :keyWidth='keyWidth'
-      :isPlaying='isPlaying'
-      :bpm='bpm'
-      :mode='mode'
-      :loopEnabled='loopEnabled'
-      :loopStart='loopStart'
-      :loopEnd='loopEnd'
-      :leftHandEnabled='leftHandEnabled'
-      :rightHandEnabled='rightHandEnabled'
-      @pause='isPlaying = false'
-      :midi-device='midiDevice'
-    )
+  runner(
+    id="sheet"
+    ref='runner'
+    :midiJson='midiJson'
+    :height='sheetHeight'
+    :width='sheetWidth'
+    :keyWidth='keyWidth'
+    :isPlaying='isPlaying'
+    :bpm='bpm'
+    :mode='mode'
+    :loopEnabled='loopEnabled'
+    :loopStart='loopStart'
+    :loopEnd='loopEnd'
+    :leftHandEnabled='leftHandEnabled'
+    :rightHandEnabled='rightHandEnabled'
+    @pause='isPlaying = false'
+    :midi-device='midiDevice'
+  )
   #keyboard
     octave(
       v-for='k in octaveAmount'
@@ -95,6 +95,7 @@ import WebMidi from 'webmidi';
 import { Midi } from '@tonejs/midi';
 import Octave from './components/Octave.vue';
 import Runner from './components/Runner.vue';
+import Sketch from './components/Sketch';
 
 export default {
   name: 'App',
@@ -148,8 +149,7 @@ export default {
       this.rawBpm = this.midiJson.header.tempos[0].bpm;
     });
     this.reader.addEventListener('loadend', () => {
-      console.log('Loaded midi file: ', this.midiJson);
-      this.$refs.runner.parseMidi();
+      Sketch(this.$refs.runner.$refs.sheet, this.midiJson);
     });
     fetch(`${this.publicPath}MozartWolfgangAmadeus_AllaTurcaRondo.midi`).then((res) => res.blob()).then((res) => {
       this.reader.readAsArrayBuffer(res);

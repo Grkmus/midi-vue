@@ -19,6 +19,7 @@
     "midi-parser-js": "^4.0.4",
     "midi-player-js": "^2.0.13",
     "p5": "^1.1.9",
+    "pixi.js": "^6.1.2",
     "pug-plain-loader": "^1.1.0",
     "tone": "^14.7.58",
     "vue": "^2.6.12",
