@@ -1,4 +1,3 @@
-// /* eslint-disable */
 import { Sprite, Graphics } from 'pixi.js';
 
 const LOWEST_KEY = 24;
@@ -15,16 +14,12 @@ const keyWidth = 30.273809523809522;
 //   F: 5,
 //   D: 5,
 // };
-const GRAY_COLOR = [138, 138, 138];
-const WHITE_COLOR = [255];
 export default class Note extends Sprite {
-  constructor(note, noteOnCb, noteOffCb) {
+  constructor(note) {
     console.log('creating the note');
     const { midi, durationTicks, ticks } = note;
     super();
     this.midiNumber = midi;
-    this.x = (midi - LOWEST_KEY) * keyWidth;
-    this.y = -ticks;
     this.w = keyWidth;
     this.h = durationTicks;
     const thing = new Graphics();
@@ -33,56 +28,55 @@ export default class Note extends Sprite {
     thing.drawRoundedRect(0, 0, this.w, this.h, 10);
     const texture = app.renderer.generateTexture(thing); //eslint-disable-line
     this.texture = texture;
-    this.noteOnCb = noteOnCb;
-    this.noteOffCb = noteOffCb;
+    this.x = (midi - LOWEST_KEY) * keyWidth;
+    this.y = -ticks;
     this.isNoteOn = false;
+    this.isPlayed = false;
+    this.pos = 0;
   }
 
-  update() {
-    if (this.y + this.height >= app.screen.height && !this.isNoteOn) {//eslint-disable-line
-      this.isNoteOn = true;
-      this.noteOnCb(this);
-      this.changeColor();
-    }
-    if (this.y > app.screen.height) {//eslint-disable-line
-      this.noteOffCb(this);
-    }
+  update(position) {
+    this.pos = position;
+    if (this.noteOnCheck()) { this.noteOn(); }
+    if (this.noteOffCheck()) { this.noteOff(); }
   }
 
-  changeColor() {
+  changeColor(color = 0x2F329F) {
     const thing = new Graphics();
     thing.lineStyle(1, 0xff0000, 1);
-    thing.beginFill(0x2F329F, 0.5);
+    thing.beginFill(color, 0.5);
     thing.drawRoundedRect(0, 0, this.w, this.h, 10);
-    const texture = app.renderer.generateTexture(thing); //eslint-disable-line
-    this.texture = texture;
+    return app.renderer.generateTexture(thing); //eslint-disable-line
   }
 
-  handEnableCheck() {
-    if (this.settings.LEFT_HAND_ENABLED.checked && this.hand === 'left') {
-      this.color = WHITE_COLOR;
-      this.isEnabled = true;
-    } else if (this.settings.RIGHT_HAND_ENABLED.checked && this.hand === 'right') {
-      this.color = WHITE_COLOR;
-      this.isEnabled = true;
-    } else {
-      this.color = GRAY_COLOR;
-      this.isEnabled = false;
-    }
+  // eslint-disable-next-line
+  noteOnCheck() { return this.pos >= this.y + app.screen.height && !this.isNoteOn; }
+
+  // eslint-disable-next-line
+  noteOffCheck() { return this.y > app.screen.height; }
+
+  noteOn() {
+    this.isNoteOn = true;
+    this.texture = this.changeColor();
   }
 
-  noteStartCheck() {
-    return this.position >= -this.y + this.height;
+  noteOff() {
+    // console.log('noteOff');
+    this.isPlayed = true;
   }
 
-  noteStopCheck() {
-    return this.position >= -this.y - this.h + this.height;
-  }
-
-  draw() {
-    this.sketch.fill(this.color);
-    this.sketch.rect(this.x, this.y, 30, this.h, 10);
-  }
+  // handEnableCheck() {
+  //   if (this.settings.LEFT_HAND_ENABLED.checked && this.hand === 'left') {
+  //     this.color = WHITE_COLOR;
+  //     this.isEnabled = true;
+  //   } else if (this.settings.RIGHT_HAND_ENABLED.checked && this.hand === 'right') {
+  //     this.color = WHITE_COLOR;
+  //     this.isEnabled = true;
+  //   } else {
+  //     this.color = GRAY_COLOR;
+  //     this.isEnabled = false;
+  //   }
+  // }
 
   pickMode() {
     if (this.settings.WAIT_FOR_INPUT_MODE.checked && this.isEnabled) {
@@ -100,16 +94,5 @@ export default class Note extends Sprite {
       // this.noteOn(note, i);
       // console.log('note started', note, i);
     }
-  }
-
-  playNote() {
-    this.isOpen = true;
-    if (this.isEnabled) this.noteOnCallBack(this.octave, this.pitch, this.midiNumber);
-  }
-
-  stopNote() {
-    this.isOpen = false;
-    if (this.isEnabled) this.noteOffCallBack(this.octave, this.pitch, this.midiNumber);
-    this.isPlayed = true;
   }
 }

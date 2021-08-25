@@ -1,12 +1,12 @@
 <template lang="pug">
-#canvas
+  canvas(ref="sheet")
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import P5 from 'p5';
 import _ from 'lodash';
-import Note from '../models/Note';
-import getSettings from '../utils/settings';
+import Sketch from './Sketch';
 
 export default {
   name: 'Runner',
@@ -47,9 +47,8 @@ export default {
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
     window.addEventListener('load', () => {
-      console.log('page is fully loaded');
-      console.log(getSettings());
-      this.sketchIt();
+      // console.log('page is fully loaded');
+      // console.log(getSettings());
       this.createKeys();
     });
     this.$parent.$on('stop', this.stop);
@@ -113,8 +112,8 @@ export default {
       if (newValue === 'playAlong') this.keysToBePressed.clear();
     },
   },
-  methods: {
 
+  methods: {
     createKeys() {
       for (let i = this.lowestKey; i < 108; i += 1) {
         this.$set(this.keys, i, false);
@@ -148,80 +147,16 @@ export default {
       this.position = this.loopStart + this.height;
     },
 
-    parseMidi() {
-      console.log('PARSING THE MIDI FILE...');
-      this.midiJson.tracks.forEach((track, trackIndex) => {
-        track.notes.forEach((note, noteIndex) => {
-          this.notes.push(
-            new Note(note, noteIndex, trackIndex, this.height, this.pressKeyComponent, this.releaseKeyComponent),
-          );
-          this.notesGrouped = _.groupBy(this.notes, (note) => Math.floor(-note.y / this.height)); // eslint-disable-line
-        });
-      });
-      this.stage.push(...Object.values(this.notesGrouped).slice(0, 2));
-      console.log(this.notesGrouped);
-      this.cachedNotes = _.cloneDeep(this.notesGrouped);
+    setTheStage(withNotes) {
+      this.stage = [...Object.values(withNotes).slice(0, 2)];
     },
 
     pressKeyComponent(octave, pitch, midiNumber) {
-      console.log('press key', octave, pitch);
-      this.$parent.$refs[octave - 1][0].$refs[pitch].pressKey(55, midiNumber);
+      this.$parent.$refs[octave][0].$refs[pitch].pressKey(55, midiNumber);
     },
 
     releaseKeyComponent(octave, pitch, midiNumber) {
-      console.log('release key');
-      this.$parent.$refs[octave - 1][0].$refs[pitch].releaseKey(midiNumber);
-    },
-
-    sketchIt() {
-      const sketch = (s) => {
-        s.effectGenerator = (x, pace) => {
-          let i = 0;
-          const { keyWidth } = this;
-          const { height } = this;
-          const { darkBlue } = this;
-          return (position) => {
-            if (i < keyWidth - 10) {
-              s.rectMode(s.CORNERS);
-              s.fill(...darkBlue, 100);
-              s.rect(x + i, 0 - position, x - i, height - position);
-              s.rectMode(s.CORNER);
-              i += pace;
-            }
-          };
-        };
-
-        s.setup = () => {
-          s.createCanvas(this.width, this.height);
-        };
-        s.draw = () => {
-          s.background(33, 33, 33);
-          s.translate(0, this.position);
-          this.stage.forEach((group, index) => {
-            for (let i = group.length - 1; i >= 0; i -= 1) {
-              const note = group[i];
-              note.update(this.position);
-              if (note.isPlayed) group.splice(i, 1);
-              if (group.length === 0) {
-                console.log('this group is finished', index);
-                console.log('retrieving next group', index + 2);
-                this.stage.push(this.notesGrouped[index + 2]);
-              }
-            }
-          });
-          s.text(this.stage.flat().length, 30, 30 - this.position);
-          s.text(this.position, 30, 60 - this.position);
-          if (this.isPlaying) {
-            this.deltaTime = s.deltaTime;
-            this.position += this.positionAdder;
-          }
-        };
-        this.sketch = s;
-        Note.prototype.sketch = s;
-        Note.prototype.settings = getSettings();
-        console.log(Note.prototype);
-      };
-      new P5(sketch, 'canvas');
+      this.$parent.$refs[octave][0].$refs[pitch].releaseKey(midiNumber);
     },
   },
 };

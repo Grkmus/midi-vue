@@ -130,8 +130,8 @@ export default {
 
   mounted() {
     WebMidi.enable(() => {
-      console.log(WebMidi.inputs);
-      console.log(WebMidi.outputs);
+      // console.log(WebMidi.inputs);
+      // console.log(WebMidi.outputs);
       this.availableInputs = WebMidi.inputs.map((input) => input.name);
       this.selectedInput = this.availableInputs[0]; //eslint-disable-line
     });
@@ -139,12 +139,12 @@ export default {
     this.sheetHeight = this.$el.querySelector('#sheet').offsetHeight;
     this.sheetWidth = this.$el.querySelector('#sheet').offsetWidth;
 
-    this.reader.addEventListener('onerror', (e) => {
-      console.log('load different.', e);
+    this.reader.addEventListener('onerror', () => {
+      // console.log('load different.', e);
     });
     this.reader.addEventListener('load', (e) => {
       // debugger;
-      console.log('reading file', e.target.result);
+      // console.log('reading file', e.target.result);
       this.midiJson = new Midi(e.target.result);
       this.rawBpm = this.midiJson.header.tempos[0].bpm;
     });
