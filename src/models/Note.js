@@ -1,7 +1,7 @@
 import { Sprite, Graphics } from 'pixi.js';
 
 const LOWEST_KEY = 24;
-const keyWidth = 30.273809523809522;
+const keyWidth = 10.273809523809524;
 // const STANDART_QUARTER_NOTE_HEIGHT = 1;
 // const OFFSETS = {
 //   'C#': 2,
@@ -32,11 +32,13 @@ export default class Note extends Sprite {
     this.y = -ticks;
     this.isNoteOn = false;
     this.isPlayed = false;
-    this.pos = 0;
+    this.hitPosition = 0;
+    this.anchor.set(1, 1);
   }
 
-  update(position) {
-    this.pos = position;
+  update(hitPosition) {
+    this.hitPosition = hitPosition;
+    // console.log('catch the position from note!', position);
     if (this.noteOnCheck()) { this.noteOn(); }
     if (this.noteOffCheck()) { this.noteOff(); }
   }
@@ -50,12 +52,13 @@ export default class Note extends Sprite {
   }
 
   // eslint-disable-next-line
-  noteOnCheck() { return this.pos >= this.y + app.screen.height && !this.isNoteOn; }
+  noteOnCheck() { return this.hitPosition <= this.position.y  && !this.isNoteOn; }
 
   // eslint-disable-next-line
-  noteOffCheck() { return this.y > app.screen.height; }
+  noteOffCheck() { return this.hitPosition <= this.position.y - this.height; }
 
   noteOn() {
+    // console.log('note on');
     this.isNoteOn = true;
     this.texture = this.changeColor();
   }

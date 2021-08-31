@@ -46,11 +46,9 @@ export default {
   mounted() {
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
-    window.addEventListener('load', () => {
-      // console.log('page is fully loaded');
-      // console.log(getSettings());
-      this.createKeys();
-    });
+    Sketch(this.$refs.sheet);
+
+    this.createKeys();
     this.$parent.$on('stop', this.stop);
   },
   computed: {
