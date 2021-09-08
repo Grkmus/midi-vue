@@ -5,13 +5,14 @@ import readFile from './ReadFile';
 
 function parseData(data, screenHeight) {
   const notes = [];
+  console.log(data.header.ppq);
+  console.log(data.durationTicks);
   data.tracks.forEach((track) => {
-    for (let i = 0; i < track.notes.length; i += 1) {
+    for (let i = 0; i < 100; i += 1) {
       const note = track.notes[i];
       notes.push(new Note(note));
     }
   });
-
   return _.chain(notes)
     .groupBy((note) => Math.floor(-note.y / screenHeight))
     .map((group) => {
@@ -33,26 +34,63 @@ export default async function initApp(view) {
   const app = new PIXI.Application({ view });
   app.resizeTo = view;
   window.app = app;
+  app.renderer.plugins.interaction.on('pointerup', (e) => {
+    console.log(e.data.global);
+  });
+  const noteContainers = await readFile().then((data) => parseData(data, app.screen.height));
+
+  const tempo = document.getElementById('tempo');
+
+  // function drawMeasures() {
+
+  // }
+  const STAGE = new PIXI.Container();
+  const BAR = new PIXI.Container();
+  app.stage.addChild(STAGE);
+  app.stage.addChild(BAR);
+
+  STAGE.addChild(...noteContainers.slice(0, 3));
+
+  const stageFrame = new PIXI.Graphics();
+  stageFrame.lineStyle(2, 0xFEEB77, 10);
+  stageFrame.drawRect(0, app.screen.height * 0.1, app.screen.width, app.screen.height * 0.9);
+  STAGE.addChild(stageFrame);
+
+  const barFrame = new PIXI.Graphics();
+  barFrame.lineStyle(2, 0xFEEB77, 10);
+  barFrame.drawRect(0, 0, app.screen.width, app.screen.height * 0.1);
+  BAR.addChild(barFrame);
+
+  const barTick = new PIXI.Graphics();
+  barTick.lineStyle(2, 0xFEEB77, 10);
+  barTick.moveTo(0, 0);
+  barTick.lineTo(0, app.screen.height * 0.1);
+  BAR.addChild(barTick);
+
   const basicText = new PIXI.Text('Basic text in pixi', {
     fontFamily: 'Arial', fontSize: 24, fill: '#ffffff', align: 'center',
   });
   basicText.x = 50;
   basicText.y = app.screen.top + 30;
-  app.stage.addChild(basicText);
+  STAGE.addChild(basicText);
+  window.stage = STAGE;
 
-  const noteContainers = await readFile().then((data) => parseData(data, app.screen.height));
-
-  const STAGE = new PIXI.Container();
-  STAGE.addChild(...noteContainers.slice(0, 3));
-  app.stage.addChild(STAGE);
-  console.log(noteContainers);
+  function drawScene() {
+    stageFrame.y = -app.stage.y;
+    barFrame.y = -app.stage.y;
+    barTick.y = -app.stage.y;
+  }
 
   const notesIterator = makeRangeIterator(3, noteContainers);
-  function gameLoop() {
-    app.stage.y += 5;
+
+  function bpm2px(deltaTime) { return (tempo.value * 4) / (1000 / deltaTime); }
+
+  // const tempo = document.getElementById('tempo');
+  function gameLoop() {//eslint-disable-line
+    app.stage.y += bpm2px(app.ticker.deltaMS);
+    drawScene();
+    barTick.x += 5;
     const hitPosition = -app.stage.y + app.screen.height;
-    basicText.y = hitPosition - 30;
-    basicText.text = STAGE.children.length;
 
     STAGE.children.forEach((group) => {
       for (let i = group.children.length - 1; i >= 0; i -= 1) {

@@ -49,7 +49,7 @@
       .module
         h3.panel-header Tempo
         .panel
-          label(for='volume') {{bpm}}bpm
+          label(for='tempo') {{bpm}}bpm
           input#tempo(v-model='rawBpm' type='range' name='tempo' min='1' max='240' step='1')
       .module
         h3.panel-header Looping
