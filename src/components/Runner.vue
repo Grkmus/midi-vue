@@ -172,7 +172,6 @@ export default {
             this.pickMode(note, i);
           }
         }
-        if (note.isOpen) note.showEffect(this.position);
 
         if (note.isNoteEnd()) {
           note.isOpen = false;
@@ -248,10 +247,8 @@ export default {
             isOpen: false,
             position: y,
             show: () => this.sketch.rect(x, y, w, h, 5),
-            write: this.sketch.imagePicker(pitch, x, y),
             isNoteStart: () => this.height <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
-            showEffect: this.sketch.effectGenerator(x + this.keyWidth / 2, 5),
           });
         });
         this.cachedNotes = _.cloneDeep(this.notes);
@@ -294,23 +291,6 @@ export default {
 
     sketchIt() {
       const sketch = (s) => {
-
-        s.effectGenerator = (x, pace) => {
-          let i = 0;
-          const { keyWidth } = this;
-          const { height } = this;
-          const { darkBlue } = this;
-          return (position) => {
-            if (i < keyWidth - 10) {
-              s.rectMode(s.CORNERS);
-              s.fill(...darkBlue, 100);
-              s.rect(x + i, 0 - position, x - i, height - position);
-              s.rectMode(s.CORNER);
-              i += pace;
-            }
-          };
-        };
-
         s.setup = () => {
           s.createCanvas(this.width, this.height);
         };
