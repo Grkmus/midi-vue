@@ -1,6 +1,8 @@
+# [TRY IT OUT HERE](https://grkmus.github.io/midi-vue/).
+
 # midi-vue
 Connect your midi keyboard and play along with a midi song.
-[TRY IT OUT HERE](https://grkmus.github.io/midi-vue/).
+
 ## Project setup
 ```
 npm install
