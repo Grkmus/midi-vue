@@ -85,6 +85,7 @@
       v-for='k in octaveAmount'
       :ref='k'
       :octaveWidth='octaveWidth'
+      :octave='k'
       :keyWidth='keyWidth'
       :key='k'
     )

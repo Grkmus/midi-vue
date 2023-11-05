@@ -1,13 +1,13 @@
 <template lang="pug">
 .octave(:style='{width: `${octaveWidth}px`}')
   .white-keys
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='C' key='C' note='C')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='D' key='D' note='D')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='E' key='E' note='E')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='F' key='F' note='F')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='G' key='G' note='G')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='A' key='A' note='A')
-    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='B' key='B' note='B')
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='C' key='C' note='C' :midiNumber="octave * 12 + 1")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='D' key='D' note='D' :midiNumber="octave * 12 + 2")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='E' key='E' note='E' :midiNumber="octave * 12 + 3")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='F' key='F' note='F' :midiNumber="octave * 12 + 4")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='G' key='G' note='G' :midiNumber="octave * 12 + 5")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='A' key='A' note='A' :midiNumber="octave * 12 + 6")
+    white-key(:style='{ width: `${whiteKeyWidth}px`}' ref='B' key='B' note='B' :midiNumber="octave * 12 + 7")
   .black-keys
     black-key(:style='{ width: `${keyWidth}px`, left:`${2 + keyWidth}px`}' ref='C#' key='C#' note='C#')
     black-key(:style='{ width: `${keyWidth}px`, left:`${4 + keyWidth * 3}px`}' ref='D#' key='D#' note='D#')
@@ -26,9 +26,13 @@ export default {
   props: {
     keyWidth: Number,
     octaveWidth: Number,
+    octave: Number,
   },
   computed: {
     whiteKeyWidth() { return this.keyWidth * 2; },
+  },
+  mounted() {
+    console.log(this.octave);
   },
 };
 </script>

@@ -6,6 +6,10 @@
 import P5 from 'p5';
 import { Piano } from '@tonejs/piano';
 import _ from 'lodash';
+import { interpolateMagma } from 'd3-scale-chromatic';
+import { scaleSequential } from 'd3-scale';
+import { color } from 'd3-color';
+// import Particle from '../Particle';
 
 export default {
   name: 'Runner',
@@ -38,9 +42,13 @@ export default {
       deltaTime: 0,
       keysToBePressed: new Set(),
       bpmScaler: 1,
+      colorScale: undefined,
     };
   },
   mounted() {
+    console.log(interpolateMagma);
+    console.log(scaleSequential);
+    this.colorScale = scaleSequential().domain([24, 107]).interpolator(interpolateMagma);
     document.addEventListener('keydown', this.keyDown);
     document.addEventListener('keyup', this.keyUp);
     window.addEventListener('load', () => {
@@ -242,11 +250,12 @@ export default {
             number: midi,
             octave,
             name: pitch,
-            color: this.pickColor(hand, pitch),
+            color: this.pickColor(midi),
             velocity: 0,
             isOpen: false,
             position: y,
             show: () => this.sketch.rect(x, y, w, h, 5),
+            // write: this.sketch.imagePicker(pitch, x, y),
             isNoteStart: () => this.height <= y + this.position,
             isNoteEnd: () => this.keyTriggerLocation <= y + h + this.position,
           });
@@ -270,15 +279,27 @@ export default {
       return _.get(offsets, note.pitch, 0);
     },
 
-    pickColor(hand, noteName) {
-      const colorOptions = {
-        // for each option: [condition, result]
-        rightHandSharp: [hand === 'right' && noteName.includes('#'), this.darkRed],
-        leftHandSharp: [hand === 'left' && noteName.includes('#'), this.darkGreen],
-        rightHand: [hand === 'right', this.red],
-        leftHand: [hand === 'left', this.green],
-      };
-      return Object.values(colorOptions).find((options) => options[0])[1];
+    // pickColor(hand, noteName) {
+    //   const colorOptions = {
+    //     // for each option: [condition, result]
+    //     rightHandSharp: [hand === 'right' && noteName.includes('#'), this.darkRed],
+    //     leftHandSharp: [hand === 'left' && noteName.includes('#'), this.darkGreen],
+    //     rightHand: [hand === 'right', this.red],
+    //     leftHand: [hand === 'left', this.green],
+    //   };
+    //   return Object.values(colorOptions).find((options) => options[0])[1];
+    // },
+    pickColor(midiNumber) {
+      // console.log(midiNumber);
+      // console.log(this.colorScale);
+      const rawColor = color(this.colorScale(midiNumber));
+      // console.log(rawColor);
+      const { r, g, b } = rawColor;
+      return [r, g, b];
+      // const color = this.colorScale(midiNumber);
+      // console.log(color);
+      // return color;
+      // return Object.values(colorOptions).find((options) => options[0])[1];
     },
 
     pressKeyComponent(octave, pitch) {
@@ -290,7 +311,24 @@ export default {
     },
 
     sketchIt() {
+      // const particles = [];
       const sketch = (s) => {
+        s.effectGenerator = (x, pace) => {
+          let i = 0;
+          const { keyWidth } = this;
+          const { height } = this;
+          const { darkBlue } = this;
+          return (position) => {
+            if (i < keyWidth - 10) {
+              s.rectMode(s.CORNERS);
+              s.fill(...darkBlue, 100);
+              s.rect(x + i, 0 - position, x - i, height - position);
+              s.rectMode(s.CORNER);
+              i += pace;
+            }
+          };
+        };
+
         s.setup = () => {
           s.createCanvas(this.width, this.height);
         };
@@ -298,6 +336,18 @@ export default {
           s.background(33, 33, 33);
           s.translate(0, this.position);
           if (this.loopEnabled) this.loopInArea();
+          // for (let i = 0; i < 5; i += 1) {
+          //   const p = new Particle();
+          //   particles.push(p);
+          // }
+          // for (let i = particles.length - 1; i >= 0; i -= 1) {
+          //   particles[i].update();
+          //   particles[i].show();
+          //   if (particles[i].finished()) {
+          //     // remove this particle
+          //     particles.splice(i, 1);
+          //   }
+          // }
           this.drawNotes(s);
           if (this.isPlaying) {
             this.deltaTime = s.deltaTime;
